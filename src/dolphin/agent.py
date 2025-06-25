@@ -13,6 +13,7 @@ from aworld.models.llm import call_llm_model
 from aworld.models.model_response import ModelResponse, ToolCall
 from aworld.output.base import StepOutput
 from aworld.utils.common import sync_exec
+
 from src.dolphin.utils import color_log, setup_logger
 
 

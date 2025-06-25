@@ -3,10 +3,10 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
+from aworld.logs.util import Color
 from mcp.server import FastMCP
 from pydantic import BaseModel, Field
 
-from aworld.logs.util import Color
 from src.dolphin.utils import color_log, setup_logger
 
 

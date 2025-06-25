@@ -5,9 +5,9 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+from aworld.config.conf import AgentConfig
 from dotenv import load_dotenv
 
-from aworld.config.conf import AgentConfig
 from src.dolphin.agent import GaiaAgent
 from src.dolphin.runner import GaiaRunner, RunnerArguments
 

@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Any, Literal
 
 import chardet
+from aworld.logs.util import Color
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic.fields import FieldInfo
 
-from aworld.logs.util import Color
 from src.dolphin.mcp_collections.base import ActionArguments, ActionCollection, ActionResponse
 from src.dolphin.mcp_collections.documents.models import DocumentMetadata
 from src.dolphin.mcp_collections.utils import get_mime_type

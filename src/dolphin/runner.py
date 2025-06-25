@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Literal
 
-from tabulate import tabulate
-
 from aworld.config.conf import TaskConfig
 from aworld.core.task import Task
 from aworld.logs.util import Color
 from aworld.runner import Runners
+from tabulate import tabulate
+
 from src.dolphin.agent import GaiaAgent
 from src.dolphin.utils import color_log, question_scorer, setup_logger
 

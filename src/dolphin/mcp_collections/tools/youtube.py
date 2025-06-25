@@ -15,6 +15,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+from aworld.logs.util import Color
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from selenium import webdriver
@@ -22,7 +23,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from youtube_transcript_api import FetchedTranscript, YouTubeTranscriptApi
 
-from aworld.logs.util import Color
 from src.dolphin.mcp_collections.base import ActionArguments, ActionCollection, ActionResponse
 
 # Default driver path for Chrome WebDriver

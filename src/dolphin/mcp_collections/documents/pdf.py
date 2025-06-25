@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Literal, Optional  # Added Optional
 
 import markdown
+from aworld.logs.util import Color
 from dotenv import load_dotenv
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
@@ -15,7 +16,6 @@ from marker.settings import settings
 from pydantic import Field
 from pydantic.fields import FieldInfo
 
-from aworld.logs.util import Color
 from src.dolphin.mcp_collections.base import ActionArguments, ActionCollection, ActionResponse
 from src.dolphin.mcp_collections.documents.models import DocumentMetadata
 
