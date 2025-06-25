@@ -18,10 +18,10 @@ RUN pip --version
 RUN libreoffice --version
 
 RUN mkdir -p /var/task/chromedriver
-RUN curl -o /var/task/chromedriver/chromedriver-linux64.zip \
+RUN wget -O /var/task/chromedriver/chromedriver-linux64.zip \
     https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.49/linux64/chromedriver-linux64.zip
 RUN unzip /var/task/chromedriver/chromedriver-linux64.zip -d /var/task/chromedriver
-RUN chmod +x /var/task/chromedriver/chromedriver
+RUN chmod +x /var/task/chromedriver/chromedriver-linux64/chromedriver
 RUN rm /var/task/chromedriver/chromedriver-linux64.zip
 
 WORKDIR /var/task
@@ -39,18 +39,17 @@ RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # Create environment from YAML file
-RUN conda config --add channels https://mirrors.aliyun.com/anaconda/pkgs/main/
-RUN conda config --add channels https://mirrors.aliyun.com/anaconda/pkgs/free/
-RUN conda config --add channels https://mirrors.aliyun.com/anaconda/cloud/conda-forge/
 RUN conda config --set show_channel_urls true
 
-RUN conda env create -f /root/mcp-servers.yml && \
-    conda clean -a -y
+# RUN conda env create -f /root/mcp-servers.yml && \
+#     conda clean -a -y
+RUN conda create -n mcp-servers python=3.12
 
 # Update PATH to use the created environment
 ENV PATH="/opt/conda/envs/mcp-servers/bin:$PATH"
 
 RUN pip install -U pip pysocks -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
