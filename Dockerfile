@@ -21,7 +21,7 @@ RUN mkdir -p /var/task/chromedriver
 RUN wget -O /var/task/chromedriver/chromedriver-linux64.zip \
     https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.49/linux64/chromedriver-linux64.zip
 RUN unzip /var/task/chromedriver/chromedriver-linux64.zip -d /var/task/chromedriver
-RUN chmod +x /var/task/chromedriver/chromedriver
+RUN chmod +x /var/task/chromedriver/chromedriver-linux64/chromedriver
 RUN rm /var/task/chromedriver/chromedriver-linux64.zip
 
 WORKDIR /var/task
