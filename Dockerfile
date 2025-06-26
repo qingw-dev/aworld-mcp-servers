@@ -51,6 +51,8 @@ ENV PATH="/opt/conda/envs/mcp-servers/bin:$PATH"
 RUN pip install -U pip pysocks -i https://mirrors.aliyun.com/pypi/simple/
 RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 RUN pip install aworld==0.2.4 marker-pdf==1.7.5
+RUN pip install pathvalidate pdfminer.six puremagic pydub SpeechRecognition html2text
+RUN pip install "smolagents[toolkit]"
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
