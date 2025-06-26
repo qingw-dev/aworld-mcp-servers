@@ -1,13 +1,12 @@
 aiofiles==24.1.0
 altair==5.5.0
 annotated-types==0.7.0
-anthropic==0.55.0
+anthropic
 anyio==4.9.0
 arxiv==2.2.0
 asttokens==3.0.0
 attrs==25.3.0
 Authlib==1.6.0
-aworld==0.2.4
 backoff==2.2.1
 beautifulsoup4==4.13.4
 blinker==1.9.0
@@ -92,7 +91,6 @@ mammoth==1.9.1
 markdown-it-py==3.0.0
 markdown2==2.5.3
 markdownify==1.1.0
-marker-pdf==1.7.5
 MarkupSafe==3.0.2
 matplotlib-inline==0.1.7
 mcp==1.6.0
@@ -105,7 +103,7 @@ nodeenv==1.9.1
 numpy==2.3.1
 oauthlib==3.3.1
 ollama==0.5.1
-openai==1.66.3
+openai
 opencv-python==4.11.0.86
 opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
@@ -133,7 +131,7 @@ pyarrow==20.0.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pycparser==2.22
-pydantic==2.9.2
+pydantic==2.11.5
 pydantic-settings
 pydantic_core
 pydeck==0.9.1
