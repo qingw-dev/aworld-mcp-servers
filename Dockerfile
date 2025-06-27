@@ -43,10 +43,10 @@ RUN conda config --set show_channel_urls true
 
 # RUN conda env create -f /root/mcp-servers.yml && \
 #     conda clean -a -y
-RUN conda create -n mcp-servers python=3.12
+RUN conda create -n py312 python=3.12
 
 # Update PATH to use the created environment
-ENV PATH="/opt/conda/envs/mcp-servers/bin:$PATH"
+ENV PATH="/opt/conda/envs/py312/bin:$PATH"
 
 RUN pip install -U pip pysocks -i https://mirrors.aliyun.com/pypi/simple/
 RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
