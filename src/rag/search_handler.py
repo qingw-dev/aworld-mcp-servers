@@ -52,11 +52,11 @@ class SearchResults(BaseModel):
     search_results: list[SearchResult] = Field(..., description="搜索结果列表")
 
 
-def web_search_batch(search_query_list: list[str]) -> dict:
+def web_search_batch(search_query_list: list[str], serper_api_key: str) -> dict:
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1000) as executor:
             future_to_content = [
-                executor.submit(web_search, search_query, config) for search_query in search_query_list
+                executor.submit(web_search, search_query, config, serper_api_key) for search_query in search_query_list
             ]
         return {query: {"organic": future.result()} for query, future in zip(search_query_list, future_to_content)}
     except Exception as e:
@@ -76,7 +76,7 @@ def handle_single_query(
 
     try:
         search_query_list = search_query_list[0:topk] if len(search_query_list) > topk else search_query_list
-        api_result_dict: dict = web_search_batch(search_query_list)
+        api_result_dict: dict = web_search_batch(search_query_list, auth_args.serper_api_key)
         web_page_info_list_batch = web_search_agent.search_web_batch(
             user_query=question, search_query_list=search_query_list, api_result_dict=api_result_dict
         )

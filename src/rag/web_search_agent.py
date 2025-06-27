@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 
-def web_search(query, config):
+def web_search(query, config, serper_api_key):
     def serper_google_search(query, serper_api_key, top_k, region, lang):
         try:
             url = "https://google.serper.dev/search"
@@ -53,7 +53,7 @@ def web_search(query, config):
     if config["search_engine"] == "google":
         return serper_google_search(
             query=query,
-            serper_api_key=config["serper_api_key"],
+            serper_api_key=serper_api_key,
             top_k=config["search_top_k"],
             region=config["search_region"],
             lang=config["search_lang"],
@@ -66,6 +66,7 @@ class WebSearchAgent:
     def __init__(self, client, config, serper_api_key):
         self.client = client
         self.config = config
+        self.serper_api_key = serper_api_key
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
 
         self.BROWSER_CONFIG = {
@@ -181,7 +182,7 @@ class WebSearchAgent:
             time.time() - self.search_history[search_query]["timestamp"] <= 60 * 60 * 24
         ):
             return self.search_history[search_query]["organic"]
-        organic = web_search(search_query, self.config)
+        organic = web_search(search_query, self.config, self.serper_api_key)
         if len(organic) > 0:
             with self.search_history_lock:
                 self.search_history[search_query] = {"timestamp": time.time(), "organic": organic}
