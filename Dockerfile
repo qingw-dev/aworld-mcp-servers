@@ -57,5 +57,8 @@ RUN pip install "smolagents[toolkit]"
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
 
+# PYTHONENV
+ENV PYTHONPATH="/var/task:$PYTHONPATH"
+
 # Default to search server, but can be overridden
 CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && python3.12 -u /var/task/src/rag/search_server.py"]
