@@ -13,6 +13,8 @@ import requests
 from bs4 import BeautifulSoup
 from flask import Flask, jsonify, request
 
+from src.rag.search_handler import AuthArgs, SearchResults, handle_single_query
+
 # --- Configuration ---
 # Default number of search results to fetch per query
 NUM_RESULTS = 5
@@ -875,6 +877,88 @@ def get_metrics():
             },
         }
     )
+
+
+@app.route("/search/agentic", methods=["POST"])
+@log_performance
+def agentic_search_endpoint():
+    """Advanced search endpoint using handle_single_query function.
+
+    Expected JSON payload:
+    {
+        "question": "user question",
+        "search_queries": ["query1", "query2", "query3"],
+        "base_url": "your_openai_base_url",
+        "api_key": "your_openai_api_key",
+        "serper_api_key": "your_serper_api_key",
+        "topk": 5  // optional, defaults to 5
+    }
+    """
+    request_id = str(uuid.uuid4())[:8]
+
+    try:
+        if not request.is_json:
+            logger.warning(f"[{request_id}] Non-JSON request received")
+            return jsonify({"error": "Request must be JSON"}), 400
+
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ["question", "search_queries", "base_url", "api_key", "serper_api_key"]
+        for field in required_fields:
+            if field not in data:
+                logger.warning(f"[{request_id}] Missing required field: '{field}'")
+                return jsonify({"error": f"Missing required field: '{field}'"}), 400
+
+        question = data["question"]
+        search_queries = data["search_queries"]
+        base_url = data["base_url"]
+        api_key = data["api_key"]
+        serper_api_key = data["serper_api_key"]
+        topk = data.get("topk", 5)
+
+        # Validate input types
+        if not isinstance(search_queries, list):
+            logger.warning(f"[{request_id}] search_queries must be a list")
+            return jsonify({"error": "search_queries must be a list"}), 400
+
+        if not search_queries:
+            logger.warning(f"[{request_id}] search_queries cannot be empty")
+            return jsonify({"error": "search_queries cannot be empty"}), 400
+
+        logger.info(
+            f"[{request_id}] Processing advanced search request - Question: '{question}', "
+            f"Queries: {search_queries}, TopK: {topk}"
+        )
+
+        # Create auth args
+        auth_args = AuthArgs(base_url=base_url, api_key=api_key, serper_api_key=serper_api_key)
+
+        # Call handle_single_query function
+        search_results: SearchResults = handle_single_query(
+            question=question, search_query_list=search_queries, auth_args=auth_args, topk=topk
+        )
+
+        # Check if results are valid
+        if not search_results or not search_results.search_results:
+            logger.warning(f"[{request_id}] No search results returned")
+            return jsonify({"error": "No search results found", "request_id": request_id}), 404
+
+        # Convert to dict for JSON response
+        response_data = {
+            "request_id": request_id,
+            "question": question,
+            "search_queries": search_queries,
+            "results": search_results.model_dump(),
+            "total_results": len(search_results.search_results),
+        }
+
+        logger.info(f"[{request_id}] Agentic search completed successfully")
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        logger.error(f"[{request_id}] Agentic search failed: {str(e)}")
+        return jsonify({"error": "Internal server error", "request_id": request_id, "details": str(e)}), 500
 
 
 if __name__ == "__main__":

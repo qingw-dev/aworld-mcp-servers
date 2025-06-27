@@ -43,16 +43,23 @@ RUN conda config --set show_channel_urls true
 
 # RUN conda env create -f /root/mcp-servers.yml && \
 #     conda clean -a -y
-RUN conda create -n mcp-servers python=3.12
+RUN conda create -n py312 python=3.12
 
 # Update PATH to use the created environment
-ENV PATH="/opt/conda/envs/mcp-servers/bin:$PATH"
+ENV PATH="/opt/conda/envs/py312/bin:$PATH"
 
 RUN pip install -U pip pysocks -i https://mirrors.aliyun.com/pypi/simple/
-RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+# RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install -r /root/requirements.txt
+RUN pip install aworld==0.2.4 marker-pdf==1.7.5
+RUN pip install pathvalidate pdfminer.six puremagic pydub SpeechRecognition html2text pre_commit
+RUN pip install "smolagents[toolkit]"
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
+
+# PYTHONENV
+ENV PYTHONPATH="/var/task:$PATH"
 
 # Default to search server, but can be overridden
 CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && python3.12 -u /var/task/src/rag/search_server.py"]
