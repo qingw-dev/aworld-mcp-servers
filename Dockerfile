@@ -58,7 +58,7 @@ RUN pip install "smolagents[toolkit]"
 EXPOSE ${SEARCH_PORT}
 
 # PYTHONENV
-ENV PYTHONPATH="/var/task:$PYTHONPATH"
+ENV PYTHONPATH="/var/task:$PATH"
 
 # Default to search server, but can be overridden
 CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && python3.12 -u /var/task/src/rag/search_server.py"]
