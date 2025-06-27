@@ -49,7 +49,8 @@ RUN conda create -n py312 python=3.12
 ENV PATH="/opt/conda/envs/py312/bin:$PATH"
 
 RUN pip install -U pip pysocks -i https://mirrors.aliyun.com/pypi/simple/
-RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+# RUN pip install -r /root/requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install -r /root/requirements.txt
 RUN pip install aworld==0.2.4 marker-pdf==1.7.5
 RUN pip install pathvalidate pdfminer.six puremagic pydub SpeechRecognition html2text pre_commit
 RUN pip install "smolagents[toolkit]"
