@@ -1,7 +1,7 @@
 # aworld-mcp-servers
 The accompanying repository for the [AWorld](https://github.com/inclusionAI/AWorld) project.
 
-- 🦩 [2025/06/19] AWorld has achieved 72.43 on the GAIA test. The #1 open-source project—and the only one in GAIA's top 10. [🐦 tweets]((https://x.com/gujinjie/status/1938265242955305319))
+- 🦩 [2025/06/19] AWorld has achieved 72.43 on the GAIA test. The #1 open-source project—and the only one in GAIA's top 10. [🐦 tweets](https://x.com/gujinjie/status/1938265242955305319)
 
 # API Integration and Testing
 
