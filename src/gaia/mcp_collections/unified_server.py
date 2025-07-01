@@ -151,8 +151,13 @@ def main():
         if args.port is not None:
             parser.error("--port should not be specified when --transport=stdio")
 
+    os.makedirs(os.getenv("GAIA_WORKSPACE", "/tmp"), exist_ok=True)
     arguments = ActionArguments(
-        name=args.name, transport=args.transport, port=args.port, workspace=args.workspace, unittest=args.unittest
+        name="mcp-tools",
+        transport="sse",
+        port=19090,
+        workspace=os.getenv("GAIA_WORKSPACE", "/tmp"),
+        unittest=False,
     )
 
     server = UnifiedMCPServer(arguments)

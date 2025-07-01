@@ -16,7 +16,7 @@ class ActionArguments(BaseModel):
     name: str = Field(description="The name of the action")
     transport: Literal["stdio", "sse"] = Field(default="stdio", description="The transport of the action")
     port: int = Field(default=19091, description="The port of the SSE server")
-    workspace: str | None = Field(
+    workspace: str | Path | None = Field(
         default=None,
         description="The workspace of the action."
         " If not specified or invalid, the workspace will be read from the environment variable AWORLD_WORKSPACE.",
