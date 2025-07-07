@@ -7,7 +7,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from functools import wraps
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -204,7 +204,7 @@ def search_google(
         return [], False
 
 
-def fetch_web_content(url: str, request_id: str = None, max_len: int = 8*1024) -> Tuple[str, bool, bool]:
+def fetch_web_content(url: str, request_id: str = None, max_len: Optional[int] = 8*1024) -> Tuple[str, bool, bool]:
     """Fetches and extracts readable text content from a given URL using BeautifulSoup.
 
     Args:
@@ -244,7 +244,7 @@ def fetch_web_content(url: str, request_id: str = None, max_len: int = 8*1024) -
         text = "\n".join(chunk for chunk in chunks if chunk)
 
         # Check if truncation is needed
-        is_truncated = len(text) > max_len
+        is_truncated = max_len is not None and len(text) > max_len
         if is_truncated:
             text = text[:max_len]
 
@@ -279,6 +279,7 @@ def process_single_query(
     country: str,
     safe_search: bool,
     request_id: str,
+    max_len: Optional[int] = None,
 ) -> Tuple[str, List[Dict]]:
     """Process a single query with concurrent content fetching.
 
@@ -291,6 +292,7 @@ def process_single_query(
         country: Search country
         safe_search: Safe search setting
         request_id: Request ID for logging
+        max_len: Maximum content length (optional)
 
     Returns:
         Tuple of (query, results_list)
@@ -323,8 +325,11 @@ def process_single_query(
         abstract = result.get("abstract")
 
         if url:
-            content, fetch_success = fetch_web_content(url, request_id)
-            return {url: {"abs": abstract, "content": content, "fetch_success": fetch_success}}
+            if max_len is not None:
+                content, fetch_success, is_truncated = fetch_web_content(url, request_id, max_len)
+            else:
+                content, fetch_success, is_truncated = fetch_web_content(url, request_id)
+            return {url: {"abs": abstract, "content": content, "fetch_success": fetch_success, "is_truncated": is_truncated}}
         else:
             logger.warning(f"[{request_id}] Skipping result with no URL for query: {query}")
             return None
@@ -473,7 +478,8 @@ def search_endpoint():
         "num_results": 5,  // optional, defaults to NUM_RESULTS
         "language": "en",  // optional, defaults to "en"
         "country": "US",   // optional, defaults to "US"
-        "safe_search": true  // optional, defaults to true
+        "safe_search": true,  // optional, defaults to true
+        "max_len": 8192  // optional, content truncation length
     }
     """
     request_id = str(uuid.uuid4())[:8]
@@ -509,6 +515,7 @@ def search_endpoint():
         language = data.get("language", "en")
         country = data.get("country", "US")
         safe_search = data.get("safe_search", True)
+        max_len = data.get("max_len")
 
         # Validate parameters
         if not isinstance(num_results, int) or num_results <= 0 or num_results > 10:
@@ -525,7 +532,7 @@ def search_endpoint():
 
         # Process queries concurrently
         results = process_queries_concurrent(
-            queries, api_key, cse_id, num_results, language, country, safe_search, request_id
+            queries, api_key, cse_id, num_results, language, country, safe_search, request_id, max_len
         )
 
         return jsonify(
@@ -539,6 +546,7 @@ def search_endpoint():
                     "language": language,
                     "country": country,
                     "safe_search": safe_search,
+                    "max_len": max_len,
                 },
                 "timestamp": datetime.now().isoformat(),
             }
@@ -563,7 +571,8 @@ def single_search_endpoint():
         "fetch_content": true,  // optional, defaults to true
         "language": "en",  // optional
         "country": "US",   // optional
-        "safe_search": true  // optional
+        "safe_search": true,  // optional
+        "max_len": 8192  // optional, content truncation length
     }
     """
     request_id = str(uuid.uuid4())[:8]
@@ -590,6 +599,7 @@ def single_search_endpoint():
         language = data.get("language", "en")
         country = data.get("country", "US")
         safe_search = data.get("safe_search", True)
+        max_len = data.get("max_len")
 
         if not api_key.strip() or not cse_id.strip():
             logger.warning(f"[{request_id}] Empty API key or CSE ID provided")
@@ -624,8 +634,11 @@ def single_search_endpoint():
                 url = result.get("url")
                 abstract = result.get("abstract")
                 if url:
-                    content, fetch_success = fetch_web_content(url, request_id)
-                    return {"url": url, "abstract": abstract, "content": content, "fetch_success": fetch_success}
+                    if max_len is not None:
+                        content, fetch_success, is_truncated = fetch_web_content(url, request_id, max_len)
+                    else:
+                        content, fetch_success, is_truncated = fetch_web_content(url, request_id)
+                    return {"url": url, "abstract": abstract, "content": content, "fetch_success": fetch_success, "is_truncated": is_truncated}
                 return None
 
             with ThreadPoolExecutor(max_workers=min(MAX_CONTENT_WORKERS, len(search_results))) as executor:
@@ -678,13 +691,8 @@ def batch_search_endpoint():
                 "api_key": "api_key_1",
                 "cse_id": "cse_id_1",
                 "query": "search term 1",
-                "num_results": 5
-            },
-            {
-                "api_key": "api_key_2",
-                "cse_id": "cse_id_2",
-                "query": "search term 2",
-                "num_results": 3
+                "num_results": 5,
+                "max_len": 8192  // optional, content truncation length
             }
         ],
         "fetch_content": true  // optional, defaults to true
@@ -732,6 +740,7 @@ def batch_search_endpoint():
             language = search_item.get("language", "en")
             country = search_item.get("country", "US")
             safe_search = search_item.get("safe_search", True)
+            max_len = search_item.get("max_len")
 
             if not api_key.strip() or not cse_id.strip():
                 raise ValueError(f"'api_key' and 'cse_id' cannot be empty in search item {index}")
@@ -760,8 +769,11 @@ def batch_search_endpoint():
                     url = result.get("url")
                     abstract = result.get("abstract")
                     if url:
-                        content, fetch_success = fetch_web_content(url, f"{request_id}-{index}")
-                        return {"url": url, "abstract": abstract, "content": content, "fetch_success": fetch_success}
+                        if max_len is not None:
+                            content, fetch_success, is_truncated = fetch_web_content(url, f"{request_id}-{index}", max_len)
+                        else:
+                            content, fetch_success, is_truncated = fetch_web_content(url, f"{request_id}-{index}")
+                        return {"url": url, "abstract": abstract, "content": content, "fetch_success": fetch_success, "is_truncated": is_truncated}
                     return None
 
                 with ThreadPoolExecutor(max_workers=min(MAX_CONTENT_WORKERS, len(search_results))) as content_executor:
