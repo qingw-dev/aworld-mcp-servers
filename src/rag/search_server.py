@@ -204,17 +204,19 @@ def search_google(
         return [], False
 
 
-def fetch_web_content(url: str, request_id: str = None) -> Tuple[str, bool]:
+def fetch_web_content(url: str, request_id: str = None, max_len: int = 8*1024) -> Tuple[str, bool, bool]:
     """Fetches and extracts readable text content from a given URL using BeautifulSoup.
 
     Args:
         url: The URL of the web page.
         request_id: Request ID for logging purposes.
+        max_len: Maximum length of the content to fetch.
 
     Returns:
         A tuple containing:
-        - The extracted text content of the web page
+        - The extracted text content of the web page (truncated if necessary)
         - Boolean indicating success status
+        - Boolean indicating whether the content was truncated
     """
     fetch_start = time.time()
     update_metrics("total_content_fetches")
@@ -241,25 +243,31 @@ def fetch_web_content(url: str, request_id: str = None) -> Tuple[str, bool]:
         # Drop blank lines
         text = "\n".join(chunk for chunk in chunks if chunk)
 
+        # Check if truncation is needed
+        is_truncated = len(text) > max_len
+        if is_truncated:
+            text = text[:max_len]
+
         fetch_time = time.time() - fetch_start
         content_length = len(text)
+        truncation_info = " (truncated)" if is_truncated else ""
         logger.info(
-            f"[{request_id}] Successfully fetched content from {url} - Length: {content_length} chars - Time: {fetch_time:.3f}s"
+            f"[{request_id}] Successfully fetched content from {url} - Length: {content_length} chars{truncation_info} - Time: {fetch_time:.3f}s"
         )
         update_metrics("successful_content_fetches")
 
-        return text, True
+        return text, True, is_truncated
 
     except requests.exceptions.RequestException as e:
         fetch_time = time.time() - fetch_start
         logger.error(f"[{request_id}] Request error while fetching content from {url}: {e} - Time: {fetch_time:.3f}s")
         update_metrics("failed_content_fetches")
-        return "", False
+        return "", False, False
     except Exception as e:
         fetch_time = time.time() - fetch_start
         logger.error(f"[{request_id}] Unexpected error while parsing content from {url}: {e} - Time: {fetch_time:.3f}s")
         update_metrics("failed_content_fetches")
-        return "", False
+        return "", False, False
 
 
 def process_single_query(
