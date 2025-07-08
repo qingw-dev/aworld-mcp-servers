@@ -11,7 +11,7 @@ from browser_use.browser.context import BrowserContext, BrowserContextConfig
 import subprocess
 from pydantic import BaseModel
 
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ...metrics import get_metrics_collector
 
 logger = get_logger(__name__)
