@@ -10,7 +10,7 @@ import requests
 from openai import OpenAI
 
 from ..browser.text_web_browser import SimpleTextBrowser
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ..models.webpage import WebPageInfo
 
 logger = get_logger(__name__)

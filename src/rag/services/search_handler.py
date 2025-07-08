@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from ..agents.reading_agent import ReadingAgent
 from ..agents.web_search_agent import WebSearchAgent, web_search
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo
 
 # Load configuration

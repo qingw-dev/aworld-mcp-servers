@@ -4,7 +4,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ...config import get_settings
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ..models.requests import (
     SearchRequest,
     SingleSearchRequest,
