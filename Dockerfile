@@ -24,6 +24,10 @@ RUN unzip /var/task/chromedriver/chromedriver-linux64.zip -d /var/task/chromedri
 RUN chmod +x /var/task/chromedriver/chromedriver-linux64/chromedriver
 RUN rm /var/task/chromedriver/chromedriver-linux64.zip
 
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    dpkg -i google-chrome-stable_current_amd64.deb || apt-get install -f -y && \
+    rm google-chrome-stable_current_amd64.deb
+
 WORKDIR /var/task
 
 ADD pip.conf /root/.pip/pip.conf
@@ -31,6 +35,7 @@ ADD requirements.txt /root/requirements.txt
 ADD mcp-servers.yml /root/mcp-servers.yml
 
 ADD ./src /var/task/src
+ADD ./browser-use /var/task/browser-use
 
 RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh --no-check-certificate -O /tmp/miniconda.sh &&  \
     bash /tmp/miniconda.sh -b -p /opt/conda && \
@@ -54,6 +59,7 @@ RUN pip install -r /root/requirements.txt
 RUN pip install aworld==0.2.4 marker-pdf==1.7.5
 RUN pip install pathvalidate pdfminer.six puremagic pydub SpeechRecognition html2text pre_commit
 RUN pip install "smolagents[toolkit]"
+RUN pip install /var/task/browser-use
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
