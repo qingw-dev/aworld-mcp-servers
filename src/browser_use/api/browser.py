@@ -28,8 +28,8 @@ class Answer(BaseModel):
 async def run_browser_agent(question,browser_port,user_data_dir,model_name,api_key,base_url,temperature,enable_memory):
     controller = Controller(output_model=Answer)
     command = [
-        # "/usr/bin/google-chrome",
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/usr/bin/google-chrome",
+        # "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "--remote-debugging-port="+browser_port,
         "--no-first-run",
         "--no-default-browser-check",
@@ -43,8 +43,8 @@ async def run_browser_agent(question,browser_port,user_data_dir,model_name,api_k
     browser = Browser(
         config=BrowserConfig(
             # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
-            browser_binary_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            # browser_binary_path="/usr/bin/google-chrome",
+            # browser_binary_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            browser_binary_path="/usr/bin/google-chrome",
             chrome_remote_debugging_port=browser_port,
             new_context_config=BrowserContextConfig(no_viewport=False),
             headless=True,
