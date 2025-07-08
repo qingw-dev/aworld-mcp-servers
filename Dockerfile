@@ -68,4 +68,4 @@ EXPOSE ${SEARCH_PORT}
 ENV PYTHONPATH="/var/task:$PATH"
 
 # Default to search server, but can be overridden
-CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && python3.12 -u /var/task/src/main.py"]
+CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && cd /var/task && python3.12 -m src.main"]
