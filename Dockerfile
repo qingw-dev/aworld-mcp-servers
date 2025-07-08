@@ -67,7 +67,7 @@ RUN pip install /var/task/browser-use
 EXPOSE ${SEARCH_PORT}
 
 # PYTHONENV
-ENV PYTHONPATH="/var/task:$PATH"
+ENV PYTHONPATH="/var/task"
 
 # Default to search server, but can be overridden
 CMD ["/bin/bash", "-c", "source /opt/conda/bin/activate py312 && cd /var/task && python3.12 -m src.main"]
