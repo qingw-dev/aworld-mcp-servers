@@ -197,3 +197,4 @@ cython_debug/
 *-deploy.yml
 build_*.sh
 .DS_Store
+test/
