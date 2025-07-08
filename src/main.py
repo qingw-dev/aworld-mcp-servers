@@ -10,6 +10,7 @@ from .metrics import get_metrics_collector
 from .rag.api.health import health_bp
 from .rag.api.search import search_bp
 from .openrouter import openrouter_bp
+from .browser_use import browser_bp
 
 
 def create_app(name: str = None) -> Flask:
@@ -36,6 +37,7 @@ def create_app(name: str = None) -> Flask:
     app.register_blueprint(health_bp)
     app.register_blueprint(search_bp)
     app.register_blueprint(openrouter_bp)
+    app.register_blueprint(browser_bp)
     
     # Add request ID to all requests
     @app.before_request
