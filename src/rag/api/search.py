@@ -190,7 +190,7 @@ def agentic_search_endpoint():
         "search_queries": ["query1", "query2"],
         "base_url": "openai_api_base_url",
         "api_key": "openai_api_key",
-        "llm_model_name": "openai/gpt-4o",
+        "llm_model_name": "qwen/qwen-plus",  // optional, defaults to "qwen/qwen-plus"
         "serper_api_key": "serper_api_key",
         "topk": 5  // optional
     }

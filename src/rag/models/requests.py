@@ -76,7 +76,7 @@ class AgenticSearchRequest(BaseModel):
     search_queries: list[str] = Field(..., description="Search queries", min_items=1)
     base_url: str = Field(..., description="OpenRouter API base URL")
     api_key: str = Field(..., description="OpenRouter API key", min_length=1)
-    llm_model_name: str = Field(..., description="OpenRouter LLM model name", min_length=1)
+    llm_model_name: str = Field(default="qwen/qwen-plus", description="OpenRouter LLM model name", min_length=1)
     serper_api_key: str = Field(..., description="Serper API key", min_length=1)
     topk: int = Field(default=5, description="Top K results", ge=1, le=20)
     
