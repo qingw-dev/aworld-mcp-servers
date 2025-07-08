@@ -13,7 +13,7 @@ from .responses import (
     HealthResponse,
     ErrorResponse,
 )
-from .search import SearchResult, WebContent, SearchMetrics
+from .search import SearchResult, WebContent
 
 __all__ = [
     "SearchRequest",
@@ -27,5 +27,4 @@ __all__ = [
     "ErrorResponse",
     "SearchResult",
     "WebContent",
-    "SearchMetrics",
 ]

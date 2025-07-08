@@ -4,16 +4,6 @@ A comprehensive search and content processing system with AI agents,
 web browsing capabilities, and various search services.
 """
 
-# Core utilities and configuration
-from .core import (
-    Settings,
-    get_settings,
-    setup_logging,
-    get_logger,
-    MetricsCollector,
-    get_metrics_collector,
-)
-
 # AI Agents
 from .agents import (
     ReadingAgent,
@@ -41,7 +31,6 @@ from .models import (
     ErrorResponse,
     SearchResult,
     WebContent,
-    SearchMetrics,
 )
 
 # API Blueprints

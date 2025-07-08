@@ -1,7 +1,6 @@
 """Legacy search handler service - to be gradually migrated."""
 
 import concurrent.futures
-import logging
 import os
 import traceback
 from dataclasses import dataclass
@@ -13,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from ..agents.reading_agent import ReadingAgent
 from ..agents.web_search_agent import WebSearchAgent, web_search
-from ..core.logging import get_logger
+from ...logging import get_logger
 from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo
 
 # Load configuration
@@ -27,6 +26,7 @@ class AuthArgs:
     base_url: str
     api_key: str
     serper_api_key: str
+    llm_model_name: str
 
 
 class WebPageDetail(BaseModel):
@@ -144,7 +144,7 @@ def handle_single_query(
     web_search_agent = WebSearchAgent(
         client=client, config=config, serper_api_key=auth_args.serper_api_key
     )
-    reading_agent = ReadingAgent(client=client, config=config)
+    reading_agent = ReadingAgent(client=client, config=config, llm_model_name=auth_args.llm_model_name)
     
     try:
         # Limit number of queries
@@ -229,6 +229,7 @@ def check_health() -> None:
         base_url=os.getenv("base_url", ""),
         api_key=os.getenv("api_key", ""),
         serper_api_key=os.getenv("serper_api_key", ""),
+        llm_model_name=os.getenv("llm_model_name", ""),
     )
     
     search_results = handle_single_query(

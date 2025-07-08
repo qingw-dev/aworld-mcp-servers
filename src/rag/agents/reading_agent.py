@@ -6,7 +6,7 @@ from typing import Any
 import html2text
 from openai import OpenAI
 
-from ..core.logging import get_logger
+from ...logging import get_logger
 from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo, EXTRACT_NEW_INFO_PROMPT
 from ..utils.text_processing import get_content_from_tag, get_response_from_llm
 
@@ -23,7 +23,7 @@ class ReadingAgent:
     4. Providing structured output for downstream processing
     """
 
-    def __init__(self, client: OpenAI, config: dict[str, Any]) -> None:
+    def __init__(self, client: OpenAI, config: dict[str, Any], llm_model_name: str) -> None:
         """Initialize the reading agent.
         
         Args:
@@ -32,6 +32,7 @@ class ReadingAgent:
         """
         self.client = client
         self.config = config
+        self.llm_model_name = llm_model_name
         self.logger = get_logger(self.__class__.__name__)
 
     def read(
@@ -188,7 +189,7 @@ class ReadingAgent:
         response = get_response_from_llm(
             messages=messages,
             client=self.client,
-            model=self.config["reading_agent_model"],
+            model=self.llm_model_name,
             stream=False
         )
 

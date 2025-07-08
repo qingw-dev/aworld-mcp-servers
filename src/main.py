@@ -4,11 +4,12 @@ import uuid
 import logging
 from flask import Flask, g, request
 
-from .rag.core.config import get_settings
-from .rag.core.logging import setup_logging, get_logger
-from .rag.core.metrics import get_metrics_collector
+from .config import get_settings
+from .logging import setup_logging, get_logger
+from .metrics import get_metrics_collector
 from .rag.api.health import health_bp
 from .rag.api.search import search_bp
+from .openrouter import openrouter_bp
 
 
 def create_app(name: str = None) -> Flask:
@@ -34,6 +35,7 @@ def create_app(name: str = None) -> Flask:
     # Register blueprints
     app.register_blueprint(health_bp)
     app.register_blueprint(search_bp)
+    app.register_blueprint(openrouter_bp)
     
     # Add request ID to all requests
     @app.before_request

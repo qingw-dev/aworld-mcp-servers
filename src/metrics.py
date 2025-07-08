@@ -4,9 +4,15 @@ import threading
 import time
 from functools import wraps
 from typing import Any, Callable
+from pydantic import BaseModel, Field
 
-from ..models.search import SearchMetrics
-
+class SearchMetrics(BaseModel):
+    """Model for search service metrics."""
+    
+    requests: dict[str, int | float] = Field(..., description="Request metrics")
+    searches: dict[str, int | float] = Field(..., description="Search metrics")
+    content_fetches: dict[str, int | float] = Field(..., description="Content fetch metrics")
+    performance: dict[str, float | int] = Field(..., description="Performance metrics")
 
 class MetricsCollector:
     """Thread-safe metrics collector for the search service."""

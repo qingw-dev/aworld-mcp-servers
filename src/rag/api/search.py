@@ -4,8 +4,8 @@ import uuid
 from flask import Blueprint, request, jsonify, g
 from pydantic import ValidationError
 
-from ..core.logging import get_logger
-from ..core.metrics import get_metrics_collector
+from ...logging import get_logger
+from ...metrics import get_metrics_collector
 from ..models.requests import (
     SearchRequest,
     SingleSearchRequest,
@@ -190,6 +190,7 @@ def agentic_search_endpoint():
         "search_queries": ["query1", "query2"],
         "base_url": "openai_api_base_url",
         "api_key": "openai_api_key",
+        "llm_model_name": "openai/gpt-4o",
         "serper_api_key": "serper_api_key",
         "topk": 5  // optional
     }

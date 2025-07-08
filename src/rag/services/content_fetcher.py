@@ -5,9 +5,9 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-from ..core.config import get_settings
-from ..core.logging import get_logger
-from ..core.metrics import get_metrics_collector
+from ...config import get_settings
+from ...logging import get_logger
+from ...metrics import get_metrics_collector
 
 
 class ContentFetcherService:

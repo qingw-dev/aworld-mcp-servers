@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, Field
 
-from .search import SearchResult, SearchMetrics
+from .search import SearchResult
+from ...metrics import SearchMetrics
 
 
 class BaseResponse(BaseModel):

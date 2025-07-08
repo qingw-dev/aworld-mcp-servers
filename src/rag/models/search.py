@@ -21,12 +21,3 @@ class SearchResult(BaseModel):
     content: str | None = Field(default=None, description="Web page content if fetched")
     fetch_success: bool | None = Field(default=None, description="Content fetch status")
     is_truncated: bool | None = Field(default=None, description="Whether content was truncated")
-
-
-class SearchMetrics(BaseModel):
-    """Model for search service metrics."""
-    
-    requests: dict[str, int | float] = Field(..., description="Request metrics")
-    searches: dict[str, int | float] = Field(..., description="Search metrics")
-    content_fetches: dict[str, int | float] = Field(..., description="Content fetch metrics")
-    performance: dict[str, float | int] = Field(..., description="Performance metrics")

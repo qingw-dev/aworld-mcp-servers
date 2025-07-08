@@ -3,7 +3,7 @@
 from datetime import datetime
 from flask import Blueprint, jsonify
 
-from ..core.metrics import get_metrics_collector
+from ...metrics import get_metrics_collector
 from ..models.responses import HealthResponse
 
 health_bp = Blueprint("health", __name__)

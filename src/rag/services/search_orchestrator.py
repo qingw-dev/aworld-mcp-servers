@@ -3,8 +3,8 @@
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ..core.config import get_settings
-from ..core.logging import get_logger
+from ...config import get_settings
+from ...logging import get_logger
 from ..models.requests import (
     SearchRequest,
     SingleSearchRequest,
@@ -258,6 +258,7 @@ class SearchOrchestratorService:
                 base_url=request.base_url,
                 api_key=request.api_key,
                 serper_api_key=request.serper_api_key,
+                llm_model_name=request.llm_model_name,
             )
             
             search_results = handle_single_query(
