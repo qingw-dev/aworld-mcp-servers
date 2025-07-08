@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from openai import OpenAI
 
-from ...logging import get_logger
+from ...server_logging import get_logger
 
 logger = get_logger(__name__)
 

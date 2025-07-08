@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from ...config import get_settings
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ...metrics import get_metrics_collector
 
 

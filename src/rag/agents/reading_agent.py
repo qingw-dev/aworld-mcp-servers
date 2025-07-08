@@ -6,7 +6,7 @@ from typing import Any
 import html2text
 from openai import OpenAI
 
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo, EXTRACT_NEW_INFO_PROMPT
 from ..utils.text_processing import get_content_from_tag, get_response_from_llm
 

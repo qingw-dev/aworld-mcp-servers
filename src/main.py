@@ -5,7 +5,7 @@ import logging
 from flask import Flask, g, request
 
 from .config import get_settings
-from .logging import setup_logging, get_logger
+from .server_logging import setup_logging, get_logger
 from .metrics import get_metrics_collector
 from .rag.api.health import health_bp
 from .rag.api.search import search_bp

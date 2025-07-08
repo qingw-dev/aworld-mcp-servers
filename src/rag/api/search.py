@@ -4,7 +4,7 @@ import uuid
 from flask import Blueprint, request, jsonify, g
 from pydantic import ValidationError
 
-from ...logging import get_logger
+from ...server_logging import get_logger
 from ...metrics import get_metrics_collector
 from ..models.requests import (
     SearchRequest,
