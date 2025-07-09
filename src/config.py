@@ -2,12 +2,18 @@
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
+
+    model_config = ConfigDict(
+        env_file=".env",
+        env_prefix="SEARCH_",
+        extra="allow",  # Allow extra fields from environment
+    )
 
     # Server settings
     host: str = Field(default="0.0.0.0", description="Server host")
@@ -27,10 +33,6 @@ class Settings(BaseSettings):
     # Optional API keys (can be provided per request)
     google_api_key: str | None = Field(default=None, description="Default Google API key")
     google_cse_id: str | None = Field(default=None, description="Default Google CSE ID")
-
-    class Config:
-        env_file = ".env"
-        env_prefix = "SEARCH_"
 
 
 @lru_cache()
