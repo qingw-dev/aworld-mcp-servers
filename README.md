@@ -11,6 +11,8 @@ This repository contains examples of API requests and testing for various servic
 - [Health Check](#health-check)
 - [Google API + BeautifulSoup](#google-api--beautifulsoup)
 - [Deep Researcher](#deep-researcher)
+- [OpenRouter API](#openrouter-api)
+- [Browser Use API](#browser-use-api)
 
 ## Health Check
 This section demonstrates how to perform a health check on a specific service endpoint.
@@ -67,6 +69,68 @@ curl -X POST http://DEPLOYED_HOST:PORT/search/agentic \
 - Replace `YOUR_LLM_ENDPOINT`, `YOUR_API_KEY` and `YOUR_SERPER_API_KEY` with your actual API keys.
 - The `base_url` is the endpoint for the deep research service.
 - This request searches for information related to "machine learning" and returns the top 5 results.
+
+## OpenRouter API
+This section demonstrates how to use the OpenRouter API for LLM chat completions and model listing.
+### Chat Completions
+```bash
+curl -X POST http://DEPLOYED_HOST:PORT/openrouter/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "api_key": "YOUR_OPENROUTER_API_KEY",
+    "model": "google/gemini-2.5-pro",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello, how are you?"
+      }
+    ],
+    "site_url": "https://your-site.com",
+    "site_name": "Your Site Name"
+  }'
+```
+
+### List Available Models
+```bash
+curl -X GET http://DEPLOYED_HOST:PORT/openrouter/models
+```
+
+### Notes
+- Replace `YOUR_OPENROUTER_API_KEY` with your actual [OpenRouter](https://openrouter.ai) API key.
+- The `model` parameter supports various models available through OpenRouter (e.g., "google/gemini-2.5-pro", "anthropic/claude-opus-4", "openai/gpt-4").
+- `site_url` and `site_name` are optional parameters for tracking and attribution.
+
+## Browser Use API
+This section demonstrates how to use the Browser Use API for automated web browsing tasks.
+
+```bash
+curl -X POST http://DEPLOYED_HOST:PORT/browser_use \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Go to google.com and search for machine learning",
+    "base_url": "YOUR_LLM_ENDPOINT",
+    "api_key": "YOUR_API_KEY",
+    "model_name": "gpt-4o",
+    "temperature": 0.3,
+    "enable_memory": false,
+    "browser_port": "9111",
+    "user_data_dir": "/tmp/chrome-debug/0000",
+    "headless": true,
+    "extract_base_url": "YOUR_LLM_ENDPOINT",
+    "extract_api_key": "YOUR_API_KEY",
+    "extract_model_name": "gpt-4o",
+    "extract_temperature": 0.3,
+    "return_trace": false
+  }'
+```
+
+### Notes
+- Replace `YOUR_LLM_ENDPOINT` and `YOUR_API_KEY` with your actual LLM service endpoint and API key.
+- The `question` parameter should contain natural language instructions for the browser automation task.
+- `model_name` supports various models (e.g., "gpt-4o", "claude-3-opus-20240229", "gemini-pro").
+- Set `headless` to `false` if you want to see the browser window during automation.
+- `enable_memory` allows the agent to remember previous interactions.
+- `return_trace` includes detailed execution trace in the response.
 
 ## License
 This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
