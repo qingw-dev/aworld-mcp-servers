@@ -68,6 +68,7 @@ def main() -> None:
     logger: logging.Logger = get_logger(__name__)
     logger.info(f"Starting search server on {settings.host}:{settings.port}")
 
+    # settings.debug=True
     app.run(host=settings.host, port=settings.port, debug=settings.debug, threaded=True)
 
 
