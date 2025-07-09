@@ -56,6 +56,7 @@ async def run_browser_agent(
         "--no-first-run",
         "--no-default-browser-check",
         f"--user-data-dir={user_data_dir}",
+        "--no-sandbox",
         "--headless",
     ]
     process = subprocess.Popen(command)

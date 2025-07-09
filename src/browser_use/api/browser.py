@@ -34,6 +34,7 @@ async def run_browser_agent(question,browser_port,user_data_dir,model_name,api_k
         "--no-first-run",
         "--no-default-browser-check",
         "--user-data-dir="+user_data_dir,
+        "--no-sandbox",
         "--headless",  # 启用无头模式
         # "--disable-gpu",  # 禁用 GPU 加速（可选）
         # "--window-size=1920,1080"  # 设置窗口大小（可选）
