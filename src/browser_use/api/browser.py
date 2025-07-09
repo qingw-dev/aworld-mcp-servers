@@ -95,7 +95,7 @@ async def run_browser_agent(question,browser_port,user_data_dir,model_name,api_k
         return parsed
 
 
-@browser_bp.route("/agentic", methods=["POST"])
+@browser_bp.route("/browser_use", methods=["POST"])
 @metrics_collector.log_performance
 def agentic_search_endpoint():
     """Advanced search endpoint using handle_single_query function.

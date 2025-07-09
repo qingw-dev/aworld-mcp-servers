@@ -106,7 +106,7 @@ async def run_browser_agent(
         return parsed
 
 
-@browser_router.post("/agentic")
+@browser_router.post("/browser_use")
 async def agentic_search_endpoint(
     browser_request: BrowserAgentRequest,
     request: Request,
