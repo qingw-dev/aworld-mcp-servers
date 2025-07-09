@@ -7,7 +7,12 @@ RUN apt-get update && \
         wget \
         unzip \
         libmagic1 \
-        libreoffice
+        libreoffice \
+        dpkg \
+        apt-transport-https \
+        ca-certificates \
+        software-properties-common \
+        dbus-x11
 
 ENV HOME=/tmp
 ENV SEARCH_PORT="19090"
@@ -27,6 +32,9 @@ RUN rm /var/task/chromedriver/chromedriver-linux64.zip
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     dpkg -i google-chrome-stable_current_amd64.deb || apt-get install -f -y && \
     rm google-chrome-stable_current_amd64.deb
+
+ENV DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+RUN service dbus start
 
 ENV PATH="/usr/bin/google-chrome:${PATH}"
 
