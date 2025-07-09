@@ -37,7 +37,8 @@ curl -X POST http://DEPLOYED_HOST:PORT/search \
              "fetch_content": true,
              "language": "en",
              "country": "US",
-             "safe_search": true
+             "safe_search": true,
+             "max_len": 8192 # optional, max length of the content to fetch, only works when fetch_content is true
          }'
 ```
 
@@ -56,6 +57,7 @@ curl -X POST http://DEPLOYED_HOST:PORT/search/agentic \
     "search_queries": ["machine learning"],
     "base_url": "YOUR_LLM_ENDPOINT",
     "api_key": "YOUR_API_KEY",
+    "llm_model_name": "qwen/qwen-plus",
     "serper_api_key": "YOUR_SERPER_API_KEY",
     "topk": 5
   }'
