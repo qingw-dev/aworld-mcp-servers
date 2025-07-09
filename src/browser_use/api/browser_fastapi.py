@@ -7,10 +7,14 @@ from pydantic import BaseModel, ValidationError
 from langchain_openai import ChatOpenAI
 from browser_use import Agent, Browser, BrowserConfig, Controller
 from browser_use.browser.context import BrowserContext, BrowserContextConfig
+from browser_use.agent.memory.views import MemoryConfig
 import subprocess
+import json
 
 from ...server_logging import get_logger
 from ...metrics import get_metrics_collector
+from ..utils import get_a_trace_with_img
+
 
 browser_router = APIRouter(prefix="/browser", tags=["browser"])
 logger = get_logger(__name__)
@@ -27,90 +31,124 @@ class BrowserAgentRequest(BaseModel):
     base_url: str
     api_key: str
     model_name: str
-    browser_port: str = "9111"
     temperature: float = 0.3
     enable_memory: bool = False
+    browser_port: str = "9111"
     user_data_dir: str = "/tmp/chrome-debug/0000"
+    headless: bool = True
+    extract_base_url: str = ""
+    extract_api_key: str = ""
+    extract_model_name: str = ""
+    extract_temperature: float = 0.3
+    return_trace: bool = False
+    save_trace: bool = True
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.extract_base_url=="":
+            self.extract_base_url = self.base_url
+        if self.extract_api_key=="":
+            self.extract_api_key = self.api_key
+        if self.extract_model_name=="":
+            self.extract_model_name = self.model_name
 
 def get_request_id(request: Request) -> str:
     """Get request ID from request state."""
     return getattr(request.state, 'request_id', 'unknown')
 
 
-async def run_browser_agent(
-    question: str,
-    browser_port: str,
-    user_data_dir: str,
-    model_name: str,
-    api_key: str,
-    base_url: str,
-    temperature: float,
-    enable_memory: bool
-) -> Answer | None:
-    """Run browser agent with given parameters."""
-    controller = Controller(output_model=Answer)
-    command = [
-        # "/usr/bin/google-chrome",
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        f"--remote-debugging-port={browser_port}",
-        "--no-first-run",
-        "--no-default-browser-check",
-        f"--user-data-dir={user_data_dir}",
-        "--no-sandbox",
-        "--headless",
-    ]
-    process = subprocess.Popen(command)
 
+def run_chrome_debug_mode(browser_port,user_data_dir,headless):
+    browser_locate="/usr/bin/google-chrome"
+    try:
+        command = [
+            browser_locate,
+            f"--remote-debugging-port={browser_port}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            f"--user-data-dir={user_data_dir}",
+            "--no-sandbox",
+            # "--headless",  # 启用无头模式
+            # "--disable-gpu",  # 禁用 GPU 加速（可选）
+            # "--window-size=1920,1080"  # 设置窗口大小（可选）
+        ]
+        if headless:
+            command.append("--headless")
+        process = subprocess.Popen(command)
+    except Exception as e:
+        print(e)
+        browser_locate="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        command = [
+            browser_locate,
+            f"--remote-debugging-port={browser_port}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            f"--user-data-dir={user_data_dir}",
+            "--no-sandbox",
+            # "--headless",  # 启用无头模式
+            # "--disable-gpu",  # 禁用 GPU 加速（可选）
+            # "--window-size=1920,1080"  # 设置窗口大小（可选）
+        ]
+        if headless:
+            command.append("--headless")
+        process = subprocess.Popen(command)
+    return browser_locate, process
+
+async def run_browser_agent(question,base_url,api_key,model_name,temperature,enable_memory,browser_port,browser_locate,headless,extract_base_url,extract_api_key,extract_model_name,extract_temperature):
+    controller = Controller(output_model=Answer)
     browser = Browser(
         config=BrowserConfig(
-            browser_binary_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            # browser_binary_path="/usr/bin/google-chrome",
+            # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
+            browser_binary_path=browser_locate,
             chrome_remote_debugging_port=browser_port,
             new_context_config=BrowserContextConfig(no_viewport=False),
-            headless=True,
+            headless=headless,
         )
     )
-    
-    llm = ChatOpenAI(
+    llm=ChatOpenAI(
         model=model_name,
         api_key=api_key,
         base_url=base_url,
         temperature=temperature,
     )
-    
-    page_extraction_llm = ChatOpenAI(
-        model=model_name,
-        api_key=api_key,
-        base_url=base_url,
-        temperature=0.3,
+    page_extraction_llm=ChatOpenAI(
+        model=extract_model_name,
+        api_key=extract_api_key,
+        base_url=extract_base_url,
+        temperature=extract_temperature,
     )
+    memory_config=None
+    if enable_memory:
+        memory_config=MemoryConfig( # Ensure llm_instance is passed if not using default LLM config
+            llm_instance=page_extraction_llm,      # Important: Pass the agent's LLM instance here
+            agent_id="browser_agent_01",
+            memory_interval=10,
+        )
 
+    task=question
     agent = Agent(
-        task=question,
+        task=task,
         llm=llm,
         page_extraction_llm=page_extraction_llm,
+        # browser_session=browser_session,
         browser=browser,
         controller=controller,
         tool_calling_method="raw",
+        memory_config=memory_config,
         enable_memory=enable_memory,
     )
 
-    parsed = None
+    history=None
     try:
         history = await agent.run()
-        result = history.final_result()
-        parsed = Answer.model_validate_json(result)
     except Exception as e:
-        logger.error(f"Browser agent error: {e}")
+        print(e)
     finally:
         await browser.close()
-        process.terminate()
-        return parsed
-
-
+    return history
+    
 @browser_router.post("/browser_use")
-async def agentic_search_endpoint(
+async def agentic_browser_endpoint(
     browser_request: BrowserAgentRequest,
     request: Request,
     request_id: str = Depends(get_request_id)
@@ -131,32 +169,49 @@ async def agentic_search_endpoint(
     """
     try:
         logger.info(f"[{request_id}] Processing browser agentic search")
+
+        question = browser_request.question
+        base_url = browser_request.base_url
+        api_key = browser_request.api_key
+        model_name = browser_request.model_name
+        temperature = browser_request.temperature
+        enable_memory = browser_request.temperature
+        browser_port = browser_request.browser_port
+        user_data_dir = browser_request.user_data_dir
+        headless = browser_request.headless
+        extract_base_url = browser_request.extract_base_url
+        extract_api_key = browser_request.extract_api_key
+        extract_model_name = browser_request.extract_model_name
+        extract_temperature = browser_request.extract_temperature
+        return_trace = browser_request.return_trace
+        save_trace = browser_request.save_trace
         
-        parsed = await run_browser_agent(
-            question=browser_request.question,
-            browser_port=browser_request.browser_port,
-            user_data_dir=browser_request.user_data_dir,
-            model_name=browser_request.model_name,
-            api_key=browser_request.api_key,
-            base_url=browser_request.base_url,
-            temperature=browser_request.temperature,
-            enable_memory=browser_request.enable_memory
-        )
+        browser_locate, chrome_process=run_chrome_debug_mode(browser_port,user_data_dir,headless)
+        agent_history=await run_browser_agent(question,base_url,api_key,model_name,temperature,enable_memory,browser_port,browser_locate,headless,extract_base_url,extract_api_key,extract_model_name,extract_temperature)
+        chrome_process.terminate()
 
-        results = {}
-        if parsed:
-            logger.info(f"[{request_id}] Browser agent completed successfully")
-            results = {
-                "important_records": parsed.important_records,
-                "final_answer": parsed.final_answer
+        if agent_history:
+            result = agent_history.final_result()
+            parsed_res: Answer = Answer.model_validate_json(result)
+            answer_dict = parsed_res.model_dump()
+            print('\n--------------------------------')
+            print(f'answer_dict: {answer_dict}')
+            print('\n--------------------------------')
+
+        if return_trace:
+            tarce_info_dict={
+                "question": question,
+                "agent_answer": answer_dict
             }
-        else:
-            logger.warning(f"[{request_id}] Browser agent returned no results")
+            trace_dict = get_a_trace_with_img(agent_history,tarce_info_dict)
 
+        
+        # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
-            "question": browser_request.question,
-            "results": results,
+            "question": question,
+            "results": json.dumps(answer_dict, ensure_ascii=False),
+            "trace": json.dumps(trace_dict,ensure_ascii=False) if return_trace else "{}"
         }
 
         return response_data
@@ -167,3 +222,4 @@ async def agentic_search_endpoint(
     except Exception as e:
         logger.error(f"[{request_id}] Error in browser agentic search endpoint: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    

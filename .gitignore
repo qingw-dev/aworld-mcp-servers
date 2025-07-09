@@ -198,3 +198,4 @@ cython_debug/
 build_*.sh
 .DS_Store
 test/
+~/

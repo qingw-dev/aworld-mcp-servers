@@ -8,6 +8,7 @@ web browsing capabilities, and various search services.
 # API Blueprints
 from .api import (
     browser_bp,
+    browser_router,
 )
 
 # Utilities
@@ -21,6 +22,7 @@ __all__ = [
 
     # API
     "browser_bp",
+    "browser_router",
 
     # Utilities
     "get_a_trace_with_img",
