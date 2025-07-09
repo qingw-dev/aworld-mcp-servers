@@ -69,121 +69,77 @@ Now extract the incremental information that could help answer the main question
 
 class WebSelectInfo(BaseModel):
     """Information about web page selection decisions.
-    
+
     This model tracks the reasoning and decision-making process
     for selecting specific web pages for detailed analysis.
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    web_select_thinking: str = Field(
-        ..., 
-        description="Reasoning process for web page selection",
-        min_length=1
-    )
-    web_select_idx: str = Field(
-        ..., 
-        description="Index identifier of the selected web page"
-    )
+
+    web_select_thinking: str = Field(..., description="Reasoning process for web page selection", min_length=1)
+    web_select_idx: str = Field(..., description="Index identifier of the selected web page")
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation.
-        
+
         Returns:
             Dictionary representation of the object
         """
-        return {
-            "web_select_thinking": self.web_select_thinking,
-            "web_select_idx": self.web_select_idx
-        }
+        return {"web_select_thinking": self.web_select_thinking, "web_select_idx": self.web_select_idx}
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "WebSelectInfo":
         """Create instance from dictionary.
-        
+
         Args:
             data: Dictionary containing object data
-            
+
         Returns:
             WebSelectInfo instance
         """
-        return cls(
-            web_select_thinking=data["web_select_thinking"],
-            web_select_idx=data["web_select_idx"]
-        )
+        return cls(web_select_thinking=data["web_select_thinking"], web_select_idx=data["web_select_idx"])
 
 
 class PageReadInfo(BaseModel):
     """Information about a single page reading session.
-    
+
     This model captures all relevant information from processing
     a single page of web content, including extraction results
     and navigation decisions.
     """
-    
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    search_results_idx: int = Field(
-        ..., 
-        description="Index of the search result this page belongs to",
-        ge=0
-    )
-    url: str = Field(
-        ..., 
-        description="URL of the web page",
-        min_length=1
-    )
-    page_title: str = Field(
-        ..., 
-        description="Title of the web page"
-    )
-    fetch_res: str = Field(
-        ..., 
-        description="Raw content fetched from the web page"
-    )
-    page_thinking: str = Field(
-        default="", 
-        description="LLM reasoning process for this page"
-    )
-    page_summary: str = Field(
-        ..., 
-        description="Extracted summary of useful information",
-        min_length=1
-    )
-    page_number: int = Field(
-        ..., 
-        description="Page number within the document",
-        ge=0
-    )
-    need_page_down: bool = Field(
-        ..., 
-        description="Whether more content should be read from this page"
-    )
-    used: bool = Field(
-        default=False, 
-        description="Whether this page information has been utilized"
-    )
 
-    @field_validator('url')
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    search_results_idx: int = Field(..., description="Index of the search result this page belongs to", ge=0)
+    url: str = Field(..., description="URL of the web page", min_length=1)
+    page_title: str = Field(..., description="Title of the web page")
+    fetch_res: str = Field(..., description="Raw content fetched from the web page")
+    page_thinking: str = Field(default="", description="LLM reasoning process for this page")
+    page_summary: str = Field(..., description="Extracted summary of useful information", min_length=1)
+    page_number: int = Field(..., description="Page number within the document", ge=0)
+    need_page_down: bool = Field(..., description="Whether more content should be read from this page")
+    used: bool = Field(default=False, description="Whether this page information has been utilized")
+
+    @field_validator("url")
     def validate_url(cls, v: str) -> str:
         """Validate URL format.
-        
+
         Args:
             v: URL string to validate
-            
+
         Returns:
             Validated URL string
-            
+
         Raises:
             ValueError: If URL format is invalid
         """
-        if not (v.startswith('http://') or v.startswith('https://')):
-            raise ValueError('URL must start with http:// or https://')
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
         return v
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation.
-        
+
         Returns:
             Dictionary representation of the object
         """
@@ -202,10 +158,10 @@ class PageReadInfo(BaseModel):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PageReadInfo":
         """Create instance from dictionary.
-        
+
         Args:
             data: Dictionary containing object data
-            
+
         Returns:
             PageReadInfo instance
         """
@@ -224,61 +180,47 @@ class PageReadInfo(BaseModel):
 
 class WebPageInfo(BaseModel):
     """Comprehensive information about a web page.
-    
+
     This model represents a complete web page with its metadata,
     content, and processing history. It serves as the primary
     data structure for web page management throughout the system.
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    title: str = Field(
-        ..., 
-        description="Title of the web page"
-    )
-    url: str = Field(
-        ..., 
-        description="URL of the web page",
-        min_length=1
-    )
-    quick_summary: str = Field(
-        default="", 
-        description="Quick summary or snippet of the web page content"
-    )
-    sub_question: str = Field(
-        ..., 
-        description="Sub-question this page is intended to answer"
-    )
+    title: str = Field(..., description="Title of the web page")
+    url: str = Field(..., description="URL of the web page", min_length=1)
+    quick_summary: str = Field(default="", description="Quick summary or snippet of the web page content")
+    sub_question: str = Field(..., description="Sub-question this page is intended to answer")
     page_read_info_list: list[PageReadInfo] = Field(
-        default_factory=list, 
-        description="List of page reading information for each processed page"
+        default_factory=list, description="List of page reading information for each processed page"
     )
     browser: Optional[SimpleTextBrowser] = Field(
-        default=None, 
+        default=None,
         description="Browser instance for content access",
-        exclude=True  # Exclude from serialization
+        exclude=True,  # Exclude from serialization
     )
 
-    @field_validator('url')
+    @field_validator("url")
     def validate_url(cls, v: str) -> str:
         """Validate URL format.
-        
+
         Args:
             v: URL string to validate
-            
+
         Returns:
             Validated URL string
-            
+
         Raises:
             ValueError: If URL format is invalid
         """
-        if not (v.startswith('http://') or v.startswith('https://')):
-            raise ValueError('URL must start with http:// or https://')
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
         return v
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation.
-        
+
         Returns:
             Dictionary representation of the object
         """
@@ -291,17 +233,13 @@ class WebPageInfo(BaseModel):
         }
 
     @classmethod
-    def from_dict(
-        cls, 
-        data: dict[str, Any], 
-        browser: Optional[SimpleTextBrowser] = None
-    ) -> "WebPageInfo":
+    def from_dict(cls, data: dict[str, Any], browser: Optional[SimpleTextBrowser] = None) -> "WebPageInfo":
         """Create instance from dictionary.
-        
+
         Args:
             data: Dictionary containing object data
             browser: Optional browser instance
-            
+
         Returns:
             WebPageInfo instance
         """
@@ -315,15 +253,14 @@ class WebPageInfo(BaseModel):
 
         # Reconstruct page_read_info_list
         web_page_info.page_read_info_list = [
-            PageReadInfo.from_dict(info_data) 
-            for info_data in data.get("page_read_info_list", [])
+            PageReadInfo.from_dict(info_data) for info_data in data.get("page_read_info_list", [])
         ]
 
         return web_page_info
 
     def get_total_content_length(self) -> int:
         """Get total length of all processed content.
-        
+
         Returns:
             Total character count of all page content
         """
@@ -331,7 +268,7 @@ class WebPageInfo(BaseModel):
 
     def get_summary_text(self) -> str:
         """Get concatenated summary of all pages.
-        
+
         Returns:
             Combined summary text from all processed pages
         """
@@ -339,7 +276,7 @@ class WebPageInfo(BaseModel):
 
     def has_useful_content(self) -> bool:
         """Check if the page contains useful extracted content.
-        
+
         Returns:
             True if any page has useful content, False otherwise
         """
@@ -348,30 +285,24 @@ class WebPageInfo(BaseModel):
 
 class SearchResultInfo(BaseModel):
     """Information about search results for a specific query.
-    
+
     This model aggregates all web pages found for a particular
     search query, along with selection decisions and metadata.
     """
-    
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    search_query: str = Field(
-        ..., 
-        description="The search query that generated these results",
-        min_length=1
-    )
+    search_query: str = Field(..., description="The search query that generated these results", min_length=1)
     web_page_info_list: list[WebPageInfo] = Field(
-        default_factory=list, 
-        description="List of web pages found for this query"
+        default_factory=list, description="List of web pages found for this query"
     )
     web_select_info_list: list[WebSelectInfo] = Field(
-        default_factory=list, 
-        description="List of page selection decisions"
+        default_factory=list, description="List of page selection decisions"
     )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary representation.
-        
+
         Returns:
             Dictionary representation of the object
         """
@@ -384,32 +315,26 @@ class SearchResultInfo(BaseModel):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "SearchResultInfo":
         """Create instance from dictionary.
-        
+
         Args:
             data: Dictionary containing object data
-            
+
         Returns:
             SearchResultInfo instance
         """
         instance = cls(
             search_query=data["search_query"],
-            web_page_info_list=[
-                WebPageInfo.from_dict(info) 
-                for info in data.get("web_page_info_list", [])
-            ],
+            web_page_info_list=[WebPageInfo.from_dict(info) for info in data.get("web_page_info_list", [])],
         )
-        
+
         if "web_select_info_list" in data:
-            instance.web_select_info_list = [
-                WebSelectInfo.from_dict(info) 
-                for info in data["web_select_info_list"]
-            ]
-            
+            instance.web_select_info_list = [WebSelectInfo.from_dict(info) for info in data["web_select_info_list"]]
+
         return instance
 
     def get_total_pages(self) -> int:
         """Get total number of web pages in results.
-        
+
         Returns:
             Total count of web pages
         """
@@ -417,7 +342,7 @@ class SearchResultInfo(BaseModel):
 
     def get_pages_with_content(self) -> list[WebPageInfo]:
         """Get pages that have useful content.
-        
+
         Returns:
             List of pages with extracted content
         """
@@ -425,12 +350,9 @@ class SearchResultInfo(BaseModel):
 
     def get_selected_pages(self) -> list[WebPageInfo]:
         """Get pages that were selected for detailed reading.
-        
+
         Returns:
             List of selected web pages
         """
         selected_indices = {info.web_select_idx for info in self.web_select_info_list}
-        return [
-            page for i, page in enumerate(self.web_page_info_list) 
-            if str(i) in selected_indices
-        ]
+        return [page for i, page in enumerate(self.web_page_info_list) if str(i) in selected_indices]

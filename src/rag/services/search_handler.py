@@ -10,9 +10,9 @@ import yaml
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from ...server_logging import get_logger
 from ..agents.reading_agent import ReadingAgent
 from ..agents.web_search_agent import WebSearchAgent, web_search
-from ...server_logging import get_logger
 from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo
 
 # Load configuration
@@ -22,7 +22,7 @@ config = yaml.safe_load(open(Path(__file__).parent.parent / "config.yml"))
 @dataclass
 class AuthArgs:
     """Authentication arguments for external services."""
-    
+
     base_url: str
     api_key: str
     serper_api_key: str
@@ -31,43 +31,35 @@ class AuthArgs:
 
 class WebPageDetail(BaseModel):
     """Detailed webpage information for API responses."""
-    
+
     title: str = Field(..., description="Page title")
     url: str = Field(..., description="Page URL")
     quick_summary: str = Field(..., description="Page summary")
     sub_question: str = Field(..., description="Page sub-question")
-    page_read_info_list: list[PageReadInfo] = Field(
-        ..., description="Page reading information"
-    )
+    page_read_info_list: list[PageReadInfo] = Field(..., description="Page reading information")
 
 
 class SearchResult(BaseModel):
     """Individual search result with optional detailed information."""
-    
+
     user_question: str = Field(..., description="User's original question")
     search_query: str = Field(..., description="Search query used")
-    search_result_info_list: list[SearchResultInfo] = Field(
-        ..., description="Search result information"
-    )
-    search_detail: dict[str, WebPageDetail] | None = Field(
-        default=None, description="Detailed search information"
-    )
+    search_result_info_list: list[SearchResultInfo] = Field(..., description="Search result information")
+    search_detail: dict[str, WebPageDetail] | None = Field(default=None, description="Detailed search information")
 
 
 class SearchResults(BaseModel):
     """Collection of search results."""
-    
-    search_results: list[SearchResult] = Field(
-        ..., description="List of search results"
-    )
+
+    search_results: list[SearchResult] = Field(..., description="List of search results")
 
 
 def convert_web_page_info_to_detail(web_page_info: WebPageInfo) -> WebPageDetail:
     """Convert WebPageInfo to WebPageDetail for API responses.
-    
+
     Args:
         web_page_info: Source webpage information
-        
+
     Returns:
         Converted webpage detail
     """
@@ -82,23 +74,22 @@ def convert_web_page_info_to_detail(web_page_info: WebPageInfo) -> WebPageDetail
 
 def web_search_batch(search_query_list: list[str], serper_api_key: str) -> dict:
     """Perform batch web searches concurrently.
-    
+
     Args:
         search_query_list: List of search queries
         serper_api_key: API key for search service
-        
+
     Returns:
         Dictionary mapping queries to search results
     """
     logger = get_logger(__name__)
-    
+
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
             future_to_content = [
-                executor.submit(web_search, search_query, config, serper_api_key)
-                for search_query in search_query_list
+                executor.submit(web_search, search_query, config, serper_api_key) for search_query in search_query_list
             ]
-        
+
         results = {}
         for query, future in zip(search_query_list, future_to_content):
             try:
@@ -106,9 +97,9 @@ def web_search_batch(search_query_list: list[str], serper_api_key: str) -> dict:
             except Exception as e:
                 logger.error(f"Error in search for query '{query}': {e}")
                 results[query] = {"organic": []}
-        
+
         return results
-        
+
     except Exception as e:
         logger.error(f"web_search_batch error: {e}")
         return {}
@@ -121,45 +112,43 @@ def handle_single_query(
     topk: int = 5,
 ) -> SearchResults | None:
     """Handle a single research query with multiple search terms.
-    
+
     This function orchestrates the complete research pipeline:
     1. Perform web searches for all queries
     2. Extract and analyze search results
     3. Read and extract information from selected pages
     4. Return structured results
-    
+
     Args:
         question: Main research question
         search_query_list: List of search queries to execute
         auth_args: Authentication arguments
         topk: Maximum number of queries to process
-        
+
     Returns:
         Structured search results or None if failed
     """
     logger = get_logger(__name__)
-    
+
     # Initialize clients and agents
     client = OpenAI(base_url=auth_args.base_url, api_key=auth_args.api_key)
-    web_search_agent = WebSearchAgent(
-        client=client, config=config, serper_api_key=auth_args.serper_api_key
-    )
+    web_search_agent = WebSearchAgent(client=client, config=config, serper_api_key=auth_args.serper_api_key)
     reading_agent = ReadingAgent(client=client, config=config, llm_model_name=auth_args.llm_model_name)
-    
+
     try:
         # Limit number of queries
         search_query_list = search_query_list[:topk] if len(search_query_list) > topk else search_query_list
-        
+
         # Perform batch web searches
         api_result_dict = web_search_batch(search_query_list, auth_args.serper_api_key)
-        
+
         # Process search results
         web_page_info_list_batch = web_search_agent.search_web_batch(
             user_query=question,
             search_query_list=search_query_list,
             api_result_dict=api_result_dict,
         )
-        
+
         # Build search result info list
         search_result_info_list: list[SearchResultInfo] = []
         for search_query, web_page_info_list in zip(search_query_list, web_page_info_list_batch):
@@ -170,7 +159,7 @@ def handle_single_query(
             }
             search_result_info = SearchResultInfo.model_validate(data)
             search_result_info_list.append(search_result_info)
-        
+
         # Create initial search results
         search_results: list[SearchResult] = []
         for search_result_info in search_result_info_list:
@@ -182,11 +171,11 @@ def handle_single_query(
                     search_detail=None,
                 )
             )
-        
-    except Exception as e:
+
+    except Exception:
         logger.error(f"handle_single_query error: {traceback.format_exc()}")
         return None
-    
+
     try:
         # Read and extract detailed information
         for search_result in search_results:
@@ -194,7 +183,7 @@ def handle_single_query(
             for search_info in search_result.search_result_info_list:
                 for web_page_info in search_info.web_page_info_list:
                     urls.append(web_page_info.url)
-            
+
             # Read webpages in batch
             read_webpage_list: list[WebPageInfo] = reading_agent.read_batch(
                 user_query=question,
@@ -202,40 +191,37 @@ def handle_single_query(
                 url_list=urls,
                 web_search_agent=web_search_agent,
             )
-            
+
             # Convert to detailed format
             web_detail_dict: dict[str, WebPageDetail] = {
-                read_webpage.url: convert_web_page_info_to_detail(read_webpage)
-                for read_webpage in read_webpage_list
+                read_webpage.url: convert_web_page_info_to_detail(read_webpage) for read_webpage in read_webpage_list
             }
             search_result.search_detail = web_detail_dict
-        
+
         return SearchResults(search_results=search_results)
-        
-    except Exception as e:
+
+    except Exception:
         logger.error(f"handle_single_query reading error: {traceback.format_exc()}")
         return None
 
 
 def check_health() -> None:
     """Perform health check of the search pipeline.
-    
+
     Raises:
         AssertionError: If health check fails
     """
     logger = get_logger(__name__)
-    
+
     auth_args = AuthArgs(
         base_url=os.getenv("base_url", ""),
         api_key=os.getenv("api_key", ""),
         serper_api_key=os.getenv("serper_api_key", ""),
         llm_model_name=os.getenv("llm_model_name", ""),
     )
-    
-    search_results = handle_single_query(
-        "machine learning", ["machine learning"], auth_args
-    )
-    
+
+    search_results = handle_single_query("machine learning", ["machine learning"], auth_args)
+
     assert search_results and len(search_results.search_results) > 0, "search_results is empty"
     logger.info("DeepResearcher pipeline [search+browse+read+summary] is healthy!")
 

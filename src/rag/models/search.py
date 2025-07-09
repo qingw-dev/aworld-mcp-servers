@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class WebContent(BaseModel):
     """Model for web content data."""
-    
+
     url: str = Field(..., description="Web page URL")
     abstract: str = Field(..., description="Search result abstract/snippet")
     content: str = Field(..., description="Extracted web page content")
@@ -15,7 +15,7 @@ class WebContent(BaseModel):
 
 class SearchResult(BaseModel):
     """Model for individual search result."""
-    
+
     url: str = Field(..., description="Result URL")
     abstract: str = Field(..., description="Result abstract/snippet")
     content: str | None = Field(default=None, description="Web page content if fetched")

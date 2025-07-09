@@ -1,16 +1,17 @@
 """Search API routes."""
 
 import uuid
-from flask import Blueprint, request, jsonify, g
+
+from flask import Blueprint, g, jsonify, request
 from pydantic import ValidationError
 
-from ...server_logging import get_logger
 from ...metrics import get_metrics_collector
+from ...server_logging import get_logger
 from ..models.requests import (
+    AgenticSearchRequest,
+    BatchSearchRequest,
     SearchRequest,
     SingleSearchRequest,
-    BatchSearchRequest,
-    AgenticSearchRequest,
 )
 from ..models.responses import ErrorResponse
 from ..services.search_orchestrator import SearchOrchestratorService
@@ -54,7 +55,7 @@ def handle_general_error(error: Exception):
 @metrics_collector.log_performance
 def search_endpoint():
     """Main search endpoint for multi-query searches.
-    
+
     Expected JSON payload:
     {
         "api_key": "your_google_api_key",
@@ -74,17 +75,17 @@ def search_endpoint():
             error="Request must be JSON",
         )
         return jsonify(response.model_dump()), 400
-    
+
     try:
         # Validate request
         search_request = SearchRequest(**request.get_json())
-        
+
         # Process search
         orchestrator = SearchOrchestratorService()
         response = orchestrator.process_search_request(search_request, g.request_id)
-        
+
         return jsonify(response.model_dump())
-        
+
     except ValidationError as e:
         raise e  # Will be handled by the error handler
     except Exception as e:
@@ -96,7 +97,7 @@ def search_endpoint():
 @metrics_collector.log_performance
 def single_search_endpoint():
     """Simplified endpoint for single query searches.
-    
+
     Expected JSON payload:
     {
         "api_key": "your_google_api_key",
@@ -117,17 +118,17 @@ def single_search_endpoint():
             error="Request must be JSON",
         )
         return jsonify(response.model_dump()), 400
-    
+
     try:
         # Validate request
         search_request = SingleSearchRequest(**request.get_json())
-        
+
         # Process search
         orchestrator = SearchOrchestratorService()
         response = orchestrator.process_single_search_request(search_request, g.request_id)
-        
+
         return jsonify(response.model_dump())
-        
+
     except ValidationError as e:
         raise e  # Will be handled by the error handler
     except Exception as e:
@@ -139,7 +140,7 @@ def single_search_endpoint():
 @metrics_collector.log_performance
 def batch_search_endpoint():
     """Batch search endpoint for multiple queries with different credentials.
-    
+
     Expected JSON payload:
     {
         "searches": [
@@ -161,17 +162,17 @@ def batch_search_endpoint():
             error="Request must be JSON",
         )
         return jsonify(response.model_dump()), 400
-    
+
     try:
         # Validate request
         search_request = BatchSearchRequest(**request.get_json())
-        
+
         # Process search
         orchestrator = SearchOrchestratorService()
         response = orchestrator.process_batch_search_request(search_request, g.request_id)
-        
+
         return jsonify(response.model_dump())
-        
+
     except ValidationError as e:
         raise e  # Will be handled by the error handler
     except Exception as e:
@@ -183,7 +184,7 @@ def batch_search_endpoint():
 @metrics_collector.log_performance
 def agentic_search_endpoint():
     """Agentic search endpoint using the existing search handler.
-    
+
     Expected JSON payload:
     {
         "question": "user question",
@@ -202,17 +203,17 @@ def agentic_search_endpoint():
             error="Request must be JSON",
         )
         return jsonify(response.model_dump()), 400
-    
+
     try:
         # Validate request
         search_request = AgenticSearchRequest(**request.get_json())
-        
+
         # Process search
         orchestrator = SearchOrchestratorService()
         response = orchestrator.process_agentic_search_request(search_request, g.request_id)
-        
+
         return jsonify(response)
-        
+
     except ValidationError as e:
         raise e  # Will be handled by the error handler
     except Exception as e:

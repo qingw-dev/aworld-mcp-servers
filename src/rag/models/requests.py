@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class BaseSearchRequest(BaseModel):
     """Base search request with common fields."""
-    
+
     api_key: str = Field(..., description="Google API key", min_length=1)
     cse_id: str = Field(..., description="Google Custom Search Engine ID", min_length=1)
     num_results: int = Field(default=5, description="Number of results to return", ge=1, le=10)
@@ -13,8 +13,8 @@ class BaseSearchRequest(BaseModel):
     country: str = Field(default="US", description="Search country code")
     safe_search: bool = Field(default=True, description="Enable safe search")
     max_len: int | None = Field(default=None, description="Maximum content length", ge=1)
-    
-    @field_validator('api_key', 'cse_id')
+
+    @field_validator("api_key", "cse_id")
     def validate_not_empty(cls, v: str) -> str:
         """Ensure API key and CSE ID are not empty strings."""
         if not v.strip():
@@ -24,10 +24,10 @@ class BaseSearchRequest(BaseModel):
 
 class SearchRequest(BaseSearchRequest):
     """Request model for multi-query search endpoint."""
-    
+
     queries: list[str] = Field(..., description="List of search queries", min_items=1)
-    
-    @field_validator('queries')
+
+    @field_validator("queries")
     def validate_queries(cls, v: list[str]) -> list[str]:
         """Ensure all queries are non-empty strings."""
         if not v:
@@ -37,11 +37,11 @@ class SearchRequest(BaseSearchRequest):
 
 class SingleSearchRequest(BaseSearchRequest):
     """Request model for single query search endpoint."""
-    
+
     query: str = Field(..., description="Search query", min_length=1)
     fetch_content: bool = Field(default=True, description="Whether to fetch web content")
-    
-    @field_validator('query')
+
+    @field_validator("query")
     def validate_query(cls, v: str) -> str:
         """Ensure query is not empty."""
         if not v.strip():
@@ -51,10 +51,10 @@ class SingleSearchRequest(BaseSearchRequest):
 
 class BatchSearchItem(BaseSearchRequest):
     """Individual search item for batch requests."""
-    
+
     query: str = Field(..., description="Search query", min_length=1)
-    
-    @field_validator('query')
+
+    @field_validator("query")
     def validate_query(cls, v: str) -> str:
         """Ensure query is not empty."""
         if not v.strip():
@@ -64,14 +64,14 @@ class BatchSearchItem(BaseSearchRequest):
 
 class BatchSearchRequest(BaseModel):
     """Request model for batch search endpoint."""
-    
+
     searches: list[BatchSearchItem] = Field(..., description="List of search items", min_items=1)
     fetch_content: bool = Field(default=True, description="Whether to fetch web content")
 
 
 class AgenticSearchRequest(BaseModel):
     """Request model for agentic search endpoint."""
-    
+
     question: str = Field(..., description="User question", min_length=1)
     search_queries: list[str] = Field(..., description="Search queries", min_items=1)
     base_url: str = Field(..., description="OpenRouter API base URL")
@@ -79,15 +79,15 @@ class AgenticSearchRequest(BaseModel):
     llm_model_name: str = Field(default="qwen/qwen-plus", description="OpenRouter LLM model name", min_length=1)
     serper_api_key: str = Field(..., description="Serper API key", min_length=1)
     topk: int = Field(default=5, description="Top K results", ge=1, le=20)
-    
-    @field_validator('question')
+
+    @field_validator("question")
     def validate_question(cls, v: str) -> str:
         """Ensure question is not empty."""
         if not v.strip():
             raise ValueError("Question cannot be empty")
         return v.strip()
-    
-    @field_validator('search_queries')
+
+    @field_validator("search_queries")
     def validate_search_queries(cls, v: list[str]) -> list[str]:
         """Ensure all search queries are non-empty strings."""
         if not v:

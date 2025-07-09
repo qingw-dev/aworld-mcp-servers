@@ -4,19 +4,22 @@ import threading
 import time
 from functools import wraps
 from typing import Any, Callable
+
 from pydantic import BaseModel, Field
+
 
 class SearchMetrics(BaseModel):
     """Model for search service metrics."""
-    
+
     requests: dict[str, int | float] = Field(..., description="Request metrics")
     searches: dict[str, int | float] = Field(..., description="Search metrics")
     content_fetches: dict[str, int | float] = Field(..., description="Content fetch metrics")
     performance: dict[str, float | int] = Field(..., description="Performance metrics")
 
+
 class MetricsCollector:
     """Thread-safe metrics collector for the search service."""
-    
+
     def __init__(self) -> None:
         """Initialize the metrics collector."""
         self._lock = threading.Lock()
@@ -32,10 +35,10 @@ class MetricsCollector:
             "failed_content_fetches": 0,
             "response_times": [],
         }
-    
+
     def increment(self, metric_name: str, value: float = 1.0) -> None:
         """Increment a metric value thread-safely.
-        
+
         Args:
             metric_name: Name of the metric to increment
             value: Value to add (default 1.0)
@@ -49,32 +52,32 @@ class MetricsCollector:
                         self._metrics[metric_name] = self._metrics[metric_name][-1000:]
                 else:
                     self._metrics[metric_name] += value
-    
+
     def get_metrics(self) -> SearchMetrics:
         """Get current metrics as a SearchMetrics model.
-        
+
         Returns:
             Current metrics data
         """
         with self._lock:
             metrics_copy = self._metrics.copy()
-        
+
         # Calculate derived metrics
         total_requests = metrics_copy["total_requests"]
         successful_requests = metrics_copy["successful_requests"]
         failed_requests = metrics_copy["failed_requests"]
-        
+
         total_searches = metrics_copy["total_searches"]
         successful_searches = metrics_copy["successful_searches"]
         failed_searches = metrics_copy["failed_searches"]
-        
+
         total_content_fetches = metrics_copy["total_content_fetches"]
         successful_content_fetches = metrics_copy["successful_content_fetches"]
         failed_content_fetches = metrics_copy["failed_content_fetches"]
-        
+
         response_times = metrics_copy["response_times"]
         avg_response_time = sum(response_times) / len(response_times) if response_times else 0.0
-        
+
         return SearchMetrics(
             requests={
                 "total": total_requests,
@@ -99,32 +102,33 @@ class MetricsCollector:
                 "total_response_times_recorded": len(response_times),
             },
         )
-    
+
     def log_performance(self, func: Callable) -> Callable:
         """Decorator to log performance metrics for functions.
-        
+
         Args:
             func: Function to be decorated
-            
+
         Returns:
             Wrapped function with performance logging
         """
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()
             self.increment("total_requests")
-            
+
             try:
                 result = func(*args, **kwargs)
                 self.increment("successful_requests")
                 return result
-            except Exception as e:
+            except Exception:
                 self.increment("failed_requests")
                 raise
             finally:
                 response_time = time.time() - start_time
                 self.increment("response_times", response_time)
-        
+
         return wrapper
 
 
@@ -134,7 +138,7 @@ _metrics_collector: MetricsCollector | None = None
 
 def get_metrics_collector() -> MetricsCollector:
     """Get the global metrics collector instance.
-    
+
     Returns:
         Global metrics collector
     """

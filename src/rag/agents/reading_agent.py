@@ -7,7 +7,7 @@ import html2text
 from openai import OpenAI
 
 from ...server_logging import get_logger
-from ..models.webpage import PageReadInfo, SearchResultInfo, WebPageInfo, EXTRACT_NEW_INFO_PROMPT
+from ..models.webpage import EXTRACT_NEW_INFO_PROMPT, PageReadInfo, SearchResultInfo, WebPageInfo
 from ..utils.text_processing import get_content_from_tag, get_response_from_llm
 
 logger = get_logger(__name__)
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class ReadingAgent:
     """Agent responsible for reading and extracting information from web pages.
-    
+
     This agent processes web content by:
     1. Reading page content in chunks
     2. Extracting relevant information using LLM
@@ -25,7 +25,7 @@ class ReadingAgent:
 
     def __init__(self, client: OpenAI, config: dict[str, Any], llm_model_name: str) -> None:
         """Initialize the reading agent.
-        
+
         Args:
             client: OpenAI client instance
             config: Configuration dictionary
@@ -45,7 +45,7 @@ class ReadingAgent:
         web_search_agent: Any | None = None,
     ) -> WebPageInfo:
         """Read and extract information from a single webpage.
-        
+
         Args:
             main_question: The main user question
             sub_question: Specific sub-question for this webpage
@@ -53,26 +53,26 @@ class ReadingAgent:
             cur_webpage: Current webpage to process
             context: List of previously processed webpages for context
             web_search_agent: Web search agent for content fetching
-            
+
         Returns:
             Updated webpage info with extracted content
         """
         if context is None:
             context = []
-            
+
         try:
             # Handle error cases
             if cur_webpage.browser == "error":
                 self.logger.warning(f"Skipping webpage due to error: {cur_webpage.url}")
                 return cur_webpage
-                
+
             # Initialize browser if needed
             if cur_webpage.browser is None:
                 if web_search_agent is None:
                     self.logger.error("Web search agent required for browser initialization")
                     cur_webpage.browser = "error"
                     return cur_webpage
-                    
+
                 cur_webpage.browser = web_search_agent.scrape_and_check_valid_api(cur_webpage.url)
                 if cur_webpage.browser is None:
                     cur_webpage.browser = "error"
@@ -82,7 +82,7 @@ class ReadingAgent:
             context_so_far_prefix = self._build_context_prefix(context)
             cur_useful_info = ""
             total_pages = len(cur_webpage.browser.viewport_pages)
-            
+
             # Process each page
             while cur_webpage.browser.viewport_current_page < total_pages:
                 try:
@@ -93,21 +93,21 @@ class ReadingAgent:
                         context_so_far_prefix=context_so_far_prefix,
                         cur_useful_info=cur_useful_info,
                         selected_result_idx=selected_result_idx,
-                        total_pages=total_pages
+                        total_pages=total_pages,
                     )
-                    
+
                     if page_info["extracted_info"]:
                         cur_useful_info += page_info["extracted_info"] + "\n\n"
-                        
+
                     if not page_info["page_down"]:
                         break
-                        
+
                 except Exception as e:
                     self.logger.error(f"Error processing page {cur_webpage.browser.viewport_current_page}: {e}")
                     break
-                    
+
             return cur_webpage
-            
+
         except Exception as e:
             self.logger.error(f"Error reading webpage {cur_webpage.url}: {e}")
             cur_webpage.browser = "error"
@@ -115,10 +115,10 @@ class ReadingAgent:
 
     def _build_context_prefix(self, context: list[WebPageInfo]) -> str:
         """Build context string from previous webpages.
-        
+
         Args:
             context: List of previously processed webpages
-            
+
         Returns:
             Formatted context string
         """
@@ -129,8 +129,7 @@ class ReadingAgent:
                 useful_info += page_read_info.page_summary + "\n\n"
             if useful_info:
                 context_prefix += (
-                    f"<sub_question>{webpage.sub_question}</sub_question>\n"
-                    f"<useful_info>{useful_info}</useful_info>\n"
+                    f"<sub_question>{webpage.sub_question}</sub_question>\n<useful_info>{useful_info}</useful_info>\n"
                 )
         return context_prefix
 
@@ -142,10 +141,10 @@ class ReadingAgent:
         context_so_far_prefix: str,
         cur_useful_info: str,
         selected_result_idx: int,
-        total_pages: int
+        total_pages: int,
     ) -> dict[str, Any]:
         """Process a single page of content.
-        
+
         Args:
             main_question: Main user question
             sub_question: Current sub-question
@@ -154,7 +153,7 @@ class ReadingAgent:
             cur_useful_info: Information gathered so far
             selected_result_idx: Index of selected result
             total_pages: Total number of pages
-            
+
         Returns:
             Dictionary with extracted info and navigation decision
         """
@@ -162,8 +161,7 @@ class ReadingAgent:
         context_so_far = ""
         if cur_useful_info:
             context_so_far = (
-                context_so_far_prefix +
-                f"<sub_question>{sub_question}</sub_question>\n"
+                context_so_far_prefix + f"<sub_question>{sub_question}</sub_question>\n"
                 f"<useful_info>{cur_useful_info}</useful_info>"
             )
         else:
@@ -186,12 +184,7 @@ class ReadingAgent:
 
         # Get LLM response
         messages = [{"role": "user", "content": prompt}]
-        response = get_response_from_llm(
-            messages=messages,
-            client=self.client,
-            model=self.llm_model_name,
-            stream=False
-        )
+        response = get_response_from_llm(messages=messages, client=self.client, model=self.llm_model_name, stream=False)
 
         # Extract information from response
         extracted_info = get_content_from_tag(response["content"], "extracted_info", "").strip()
@@ -220,11 +213,7 @@ class ReadingAgent:
         if page_down_decision:
             cur_webpage.browser.page_down()
 
-        return {
-            "extracted_info": extracted_info,
-            "page_down": page_down_decision,
-            "short_summary": short_summary
-        }
+        return {"extracted_info": extracted_info, "page_down": page_down_decision, "short_summary": short_summary}
 
     def read_batch(
         self,
@@ -232,17 +221,17 @@ class ReadingAgent:
         search_result_info_list: list[SearchResultInfo],
         url_list: list[str],
         web_search_agent: Any | None = None,
-        max_workers: int = 10
+        max_workers: int = 10,
     ) -> list[WebPageInfo]:
         """Read multiple webpages concurrently.
-        
+
         Args:
             user_query: User's search query
             search_result_info_list: List of search result information
             url_list: List of URLs to process
             web_search_agent: Web search agent for content fetching
             max_workers: Maximum number of concurrent workers
-            
+
         Returns:
             List of processed webpage information
         """
@@ -250,16 +239,16 @@ class ReadingAgent:
             # Create URL mapping
             url_dict = {url: [] for url in url_list}
             future_to_content = []
-            
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for search_result_info in search_result_info_list:
                     search_query = search_result_info.search_query
                     web_page_info_list = search_result_info.web_page_info_list
-                    
+
                     for selected_result_idx, cur_webpage in enumerate(web_page_info_list):
                         if cur_webpage.url not in url_dict:
                             continue
-                            
+
                         future = executor.submit(
                             self.read,
                             user_query,
@@ -279,9 +268,9 @@ class ReadingAgent:
                     read_webpage_list.append(cur_webpage)
                 except Exception as e:
                     self.logger.error(f"Error in batch reading: {e}")
-                    
+
             return read_webpage_list
-            
+
         except Exception as e:
             self.logger.error(f"Batch reading failed: {e}")
             return []

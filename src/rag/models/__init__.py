@@ -1,23 +1,23 @@
 """Pydantic models for the RAG search system."""
 
 from .requests import (
+    AgenticSearchRequest,
+    BatchSearchRequest,
     SearchRequest,
     SingleSearchRequest,
-    BatchSearchRequest,
-    AgenticSearchRequest,
 )
 from .responses import (
+    BatchSearchResponse,
+    ErrorResponse,
+    HealthResponse,
     SearchResponse,
     SingleSearchResponse,
-    BatchSearchResponse,
-    HealthResponse,
-    ErrorResponse,
 )
 from .search import SearchResult, WebContent
 
 __all__ = [
     "SearchRequest",
-    "SingleSearchRequest", 
+    "SingleSearchRequest",
     "BatchSearchRequest",
     "AgenticSearchRequest",
     "SearchResponse",
