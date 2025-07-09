@@ -224,3 +224,4 @@ pdfminer.six
 puremagic
 pydub
 SpeechRecognition
+flask

@@ -51,7 +51,8 @@ async def run_browser_agent(
     """Run browser agent with given parameters."""
     controller = Controller(output_model=Answer)
     command = [
-        "/usr/bin/google-chrome",
+        # "/usr/bin/google-chrome",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         f"--remote-debugging-port={browser_port}",
         "--no-first-run",
         "--no-default-browser-check",
@@ -63,7 +64,8 @@ async def run_browser_agent(
 
     browser = Browser(
         config=BrowserConfig(
-            browser_binary_path="/usr/bin/google-chrome",
+            browser_binary_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            # browser_binary_path="/usr/bin/google-chrome",
             chrome_remote_debugging_port=browser_port,
             new_context_config=BrowserContextConfig(no_viewport=False),
             headless=True,
