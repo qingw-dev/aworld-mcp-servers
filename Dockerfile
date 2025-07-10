@@ -50,6 +50,7 @@ WORKDIR /var/task
 
 # Copy Python project files
 COPY pyproject.toml uv.lock* ./
+COPY README.md ./
 COPY src/ ./src/
 COPY browser-use/ ./browser-use/
 
