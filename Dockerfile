@@ -61,7 +61,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN uv add ./browser-use
 
 # Install additional packages that might not be in pyproject.toml
-RUN uv add aworld==0.2.4 marker-pdf==1.7.5
+RUN uv pip install add aworld==0.2.4 marker-pdf==1.7.5
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
