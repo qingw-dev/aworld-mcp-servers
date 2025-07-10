@@ -199,6 +199,7 @@ build_*.sh
 .DS_Store
 test/
 ~/
+browser-use/examples/
 # uv
 .venv/
 
