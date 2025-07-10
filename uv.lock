@@ -284,7 +284,7 @@ requires-dist = [
     { name = "pandas", specifier = "==2.3.0" },
     { name = "patchright", specifier = "==1.52.5" },
     { name = "pathvalidate", specifier = ">=3.3.1" },
-    { name = "pdfminer-six", specifier = ">=20240706" },
+    { name = "pdfminer-six" },
     { name = "pillow", specifier = "==10.4.0" },
     { name = "playwright", specifier = "==1.52.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
