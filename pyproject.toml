@@ -25,6 +25,8 @@ dependencies = [
     "beautifulsoup4==4.13.4",
     "browser-use>=0.5.3",
     "certifi>=2024.8.30",
+    "chardet>=5.2.0",
+    "chess>=1.11.2",
     "click==8.2.1",
     "fastapi==0.115.6",
     "flask>=3.1.1",
@@ -48,6 +50,7 @@ dependencies = [
     "langsmith==0.3.45",
     "lxml==5.4.0",
     "mammoth>=1.9.1",
+    "markdown>=3.8.2",
     "mcp",
     "mem0ai==0.1.111",
     "numpy==2.3.1",
@@ -57,16 +60,18 @@ dependencies = [
     "pandas==2.3.0",
     "patchright==1.52.5",
     "pathvalidate>=3.3.1",
-    # "pdfminer>=20191125",  # Remove - causes conflicts
     "pdfminer-six",
-    # "marker-pdf==1.7.5",  # Remove - incompatible with browser-use
     "pillow==10.4.0",
     "playwright==1.52.0",
     "puremagic>=1.30",
     "pydantic>=2.9.2",
     "pydantic-settings",
     "pydub>=0.25.1",
+    "pygame>=2.6.1",
+    "pytesseract>=0.3.13",
+    "python-docx>=1.2.0",
     "python-dotenv==1.0.1",
+    "python-magic>=0.4.27",
     "python-pptx>=1.0.2",
     "qdrant-client==1.14.3",
     "requests==2.32.4",
@@ -77,10 +82,13 @@ dependencies = [
     "speechrecognition>=3.14.3",
     "starlette",
     "streamlit==1.46.0",
+    "tabulate",
     "tiktoken==0.9.0",
     "torch==2.7.1",
     "transformers==4.52.4",
     "typer==0.16.0",
+    "waybackpy>=3.0.6",
+    "wikipedia>=1.4.0",
     "youtube-transcript-api>=1.1.1",
 ]
 
@@ -137,12 +145,8 @@ dev-dependencies = [
 ]
 
 [[tool.uv.index]]
-url = "https://mirrors.aliyun.com/pypi/simple/"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 default = true
-
-[[tool.uv.index]]
-url = "https://pypi.org/simple"
-default = false
 
 [tool.black]
 line-length = 88

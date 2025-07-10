@@ -61,7 +61,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN uv add ./browser-use
 
 # Install aworld (compatible version)
-RUN uv pip install aworld==0.2.4
+RUN uv pip install aworld==0.2.5 marker-pdf==1.8.1
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
