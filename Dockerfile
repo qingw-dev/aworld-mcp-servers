@@ -56,7 +56,7 @@ COPY browser-use/ ./browser-use/
 
 # Install Python dependencies using uv
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-dev
+    uv sync --no-dev --index-strategy unsafe-best-match
 
 # Install browser-use from local directory
 RUN uv add ./browser-use

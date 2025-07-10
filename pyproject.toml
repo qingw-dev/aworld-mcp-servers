@@ -75,7 +75,7 @@ dependencies = [
     "starlette",
     "streamlit==1.46.0",
     "tiktoken==0.9.0",
-    "torch==2.7.1",
+    "torch==2.7.1+cpu",
     "transformers==4.52.4",
     "typer==0.16.0",
     "youtube-transcript-api>=1.1.1",
@@ -136,6 +136,10 @@ dev-dependencies = [
 [[tool.uv.index]]
 url = "https://mirrors.aliyun.com/pypi/simple/"
 default = true
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cpu"
+default = false
 
 [[tool.uv.index]]
 url = "https://pypi.org/simple"
