@@ -62,7 +62,7 @@ RUN uv add ./browser-use
 
 # Install additional packages that might not be in pyproject.toml
 RUN uv pip uninstall pdfminer pdfminer-six
-RUN uv pip install aworld==0.2.4 marker-pdf==1.7.5 pdfminer-six
+RUN uv pip install aworld==0.2.4 marker-pdf==1.7.5 pdfminer-six==20250327
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
