@@ -258,7 +258,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.13.4" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=24.0.0" },
     { name = "browser-use", specifier = ">=0.4.5" },
-    { name = "certifi", specifier = "==2025.6.15" },
+    { name = "certifi", specifier = ">=2024.8.30" },
     { name = "click", specifier = "==8.2.1" },
     { name = "fastapi", specifier = "==0.115.6" },
     { name = "flask", specifier = ">=3.1.1" },
