@@ -1,5 +1,4 @@
-# Use Python 3.12 slim image as base
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Install system dependencies
 RUN apt-get update && \
