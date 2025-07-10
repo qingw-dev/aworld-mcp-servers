@@ -1,22 +1,20 @@
 """Health check API routes."""
+
 import asyncio
-from datetime import datetime
-from browser_use.agent.memory.views import MemoryConfig
-from flask import Blueprint, jsonify
-import uuid
-from flask import Blueprint, request, jsonify, g
-from pydantic import ValidationError
-from langchain_openai import ChatOpenAI
-from browser_use import Agent, Browser, BrowserConfig, Controller
-from browser_use.browser.context import BrowserContext, BrowserContextConfig
-import subprocess
-from pydantic import BaseModel
 import json
+import subprocess
+import uuid
 
-from ...server_logging import get_logger
+from flask import Blueprint, g, jsonify, request
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, ValidationError
+
+from browser_use import Agent, Browser, BrowserConfig, Controller
+from browser_use.browser.context import BrowserContextConfig
+
 from ...metrics import get_metrics_collector
+from ...server_logging import get_logger
 from ..utils import get_a_trace_with_img
-
 
 logger = get_logger(__name__)
 metrics_collector = get_metrics_collector()
@@ -24,18 +22,20 @@ metrics_collector = get_metrics_collector()
 
 browser_bp = Blueprint("browser", __name__, url_prefix="/browser")
 
+
 @browser_bp.before_request
 def add_request_id():
     """Add unique request ID to each search request."""
     g.request_id = str(uuid.uuid4())[:8]
-    
+
 
 class Answer(BaseModel):
     important_records: str
     final_answer: str
 
-def run_chrome_debug_mode(browser_port,user_data_dir,headless):
-    browser_locate="/usr/bin/google-chrome"
+
+def run_chrome_debug_mode(browser_port, user_data_dir, headless):
+    browser_locate = "/usr/bin/google-chrome"
     try:
         command = [
             browser_locate,
@@ -53,7 +53,7 @@ def run_chrome_debug_mode(browser_port,user_data_dir,headless):
         process = subprocess.Popen(command)
     except Exception as e:
         print(e)
-        browser_locate="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        browser_locate = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         command = [
             browser_locate,
             f"--remote-debugging-port={browser_port}",
@@ -70,7 +70,22 @@ def run_chrome_debug_mode(browser_port,user_data_dir,headless):
         process = subprocess.Popen(command)
     return browser_locate, process
 
-async def run_browser_agent(question,base_url,api_key,model_name,temperature,enable_memory,browser_port,browser_locate,headless,extract_base_url,extract_api_key,extract_model_name,extract_temperature):
+
+async def run_browser_agent(
+    question,
+    base_url,
+    api_key,
+    model_name,
+    temperature,
+    enable_memory,
+    browser_port,
+    browser_locate,
+    headless,
+    extract_base_url,
+    extract_api_key,
+    extract_model_name,
+    extract_temperature,
+):
     controller = Controller(output_model=Answer)
     browser = Browser(
         config=BrowserConfig(
@@ -81,27 +96,29 @@ async def run_browser_agent(question,base_url,api_key,model_name,temperature,ena
             headless=headless,
         )
     )
-    llm=ChatOpenAI(
+    llm = ChatOpenAI(
         model=model_name,
         api_key=api_key,
         base_url=base_url,
         temperature=temperature,
     )
-    page_extraction_llm=ChatOpenAI(
+    page_extraction_llm = ChatOpenAI(
         model=extract_model_name,
         api_key=extract_api_key,
         base_url=extract_base_url,
         temperature=extract_temperature,
     )
-    memory_config=None
-    if enable_memory:
-        memory_config=MemoryConfig( # Ensure llm_instance is passed if not using default LLM config
-            llm_instance=page_extraction_llm,      # Important: Pass the agent's LLM instance here
-            agent_id="browser_agent_01",
-            memory_interval=10,
-        )
 
-    task=question
+    # depracated from browser_use >= 0.4.5
+    # memory_config=None
+    # if enable_memory:
+    #     memory_config=MemoryConfig( # Ensure llm_instance is passed if not using default LLM config
+    #         llm_instance=page_extraction_llm,      # Important: Pass the agent's LLM instance here
+    #         agent_id="browser_agent_01",
+    #         memory_interval=10,
+    #     )
+
+    task = question
     agent = Agent(
         task=task,
         llm=llm,
@@ -110,11 +127,11 @@ async def run_browser_agent(question,base_url,api_key,model_name,temperature,ena
         browser=browser,
         controller=controller,
         tool_calling_method="raw",
-        memory_config=memory_config,
-        enable_memory=enable_memory,
+        # memory_config=memory_config,
+        # enable_memory=enable_memory,
     )
 
-    history=None
+    history = None
     try:
         history = await agent.run()
     except Exception as e:
@@ -122,7 +139,6 @@ async def run_browser_agent(question,base_url,api_key,model_name,temperature,ena
     finally:
         await browser.close()
     return history
-    
 
 
 @browser_bp.route("/browser_use", methods=["POST"])
@@ -170,7 +186,7 @@ def agentic_search_endpoint():
         model_name = data["model_name"]
         temperature = data.get("temperature", 0.3)
         enable_memory = data.get("enable_memory", False)
-        browser_port = data.get("browser_port","9111")
+        browser_port = data.get("browser_port", "9111")
         user_data_dir = data.get("user_data_dir", "/tmp/chrome-debug/0000")
         headless = data.get("headless", True)
         extract_base_url = data.get("extract_base_url", base_url)
@@ -180,37 +196,49 @@ def agentic_search_endpoint():
         return_trace = data.get("return_trace", False)
         save_trace = data.get("save_trace", True)
 
-        browser_locate, chrome_process=run_chrome_debug_mode(browser_port,user_data_dir,headless)
-        agent_history=asyncio.run(run_browser_agent(question,base_url,api_key,model_name,temperature,enable_memory,browser_port,browser_locate,headless,extract_base_url,extract_api_key,extract_model_name,extract_temperature))
+        browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        agent_history = asyncio.run(
+            run_browser_agent(
+                question,
+                base_url,
+                api_key,
+                model_name,
+                temperature,
+                enable_memory,
+                browser_port,
+                browser_locate,
+                headless,
+                extract_base_url,
+                extract_api_key,
+                extract_model_name,
+                extract_temperature,
+            )
+        )
         chrome_process.terminate()
 
         if agent_history:
             result = agent_history.final_result()
             parsed_res: Answer = Answer.model_validate_json(result)
             answer_dict = parsed_res.model_dump()
-            print('\n--------------------------------')
-            print(f'answer_dict: {answer_dict}')
-            print('\n--------------------------------')
+            print("\n--------------------------------")
+            print(f"answer_dict: {answer_dict}")
+            print("\n--------------------------------")
 
         if return_trace:
-            tarce_info_dict={
-                "question": question,
-                "agent_answer": answer_dict
-            }
-            trace_dict = get_a_trace_with_img(agent_history,tarce_info_dict)
+            tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+            trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
 
-        
         # Convert to dict for JSON response
         response_data = {
             "request_id": g.request_id,
             "question": question,
             "results": json.dumps(answer_dict, ensure_ascii=False),
-            "trace": json.dumps(trace_dict,ensure_ascii=False) if return_trace else "{}"
+            "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
         }
 
         logger.info(f"[{g.request_id}] Browser Agent completed successfully")
         return jsonify(response_data), 200
-        
+
     except ValidationError as e:
         raise e  # Will be handled by the error handler
     except Exception as e:
