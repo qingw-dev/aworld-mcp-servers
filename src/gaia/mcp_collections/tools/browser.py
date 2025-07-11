@@ -15,12 +15,11 @@ import time
 import traceback
 
 from aworld.logs.util import Color
-from browser_use import Agent, AgentHistoryList, BrowserProfile
-from browser_use.agent.memory.views import MemoryConfig
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from browser_use import Agent, AgentHistoryList, BrowserProfile
 from src.gaia.mcp_collections.base import ActionArguments, ActionCollection, ActionResponse
 
 
@@ -110,8 +109,6 @@ class BrowserCollection(ActionCollection):
             llm=self.llm_config,
             extend_system_message=self.extended_browser_system_prompt,
             use_vision=True,
-            enable_memory=True,
-            memory_config=MemoryConfig(llm_instance=self.llm_config),
             browser_profile=self.browser_profile,
             save_conversation_path=f"{self.trace_log_dir}/browser_log/trace.log",
         )
@@ -282,7 +279,6 @@ class BrowserCollection(ActionCollection):
                 "Form submission and interaction",
                 "File downloads and media handling",
                 "LLM-enhanced browsing with vision",
-                "Memory-enabled browsing sessions",
                 "Robot detection and paywall handling",
             ],
             "supported_formats": ["markdown", "json", "text"],
@@ -292,7 +288,6 @@ class BrowserCollection(ActionCollection):
                 "cookies_enabled": bool(os.getenv("COOKIES_FILE_PATH")),
                 "trace_logging": True,
                 "vision_enabled": True,
-                "memory_enabled": True,
             },
         }
 
@@ -309,7 +304,6 @@ class BrowserCollection(ActionCollection):
         - **Downloads Directory:** {capabilities["configuration"]["downloads_directory"]}
         - **Cookies Enabled:** {capabilities["configuration"]["cookies_enabled"]}
         - **Vision Enabled:** {capabilities["configuration"]["vision_enabled"]}
-        - **Memory Enabled:** {capabilities["configuration"]["memory_enabled"]}
         - **Trace Logging:** {capabilities["configuration"]["trace_logging"]}
         """
 

@@ -7,6 +7,90 @@ The accompanying repository for the [AWorld](https://github.com/inclusionAI/AWor
 
 This repository contains examples of API requests and testing for various services, including health checks, web scraping with [Google API](https://developers.google.com/custom-search/v1/introduction) and BeautifulSoup, and [DeepResearcher](https://github.com/GAIR-NLP/DeepResearcher) search workflow re-implementation.
 
+## Quick Setup
+
+### Prerequisites
+- Python 3.12 or higher
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Installation
+
+1. **Install uv** (if not already installed):
+   ```bash
+   # macOS/Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Windows
+   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+   
+   # Or via pip
+   pip install uv
+   ```
+
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/aworld-mcp-servers.git
+   cd aworld-mcp-servers
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   uv sync
+   ```
+
+4. **Activate the virtual environment** (optional, uv handles this automatically):
+   ```bash
+   source .venv/bin/activate  # macOS/Linux
+   # or
+   .venv\Scripts\activate     # Windows
+   ```
+
+### Running the Application
+
+- **Main Flask server**:
+  ```bash
+  uv run aworld-server
+  ```
+
+- **FastAPI server**:
+  ```bash
+  uv run aworld-fastapi
+  ```
+
+- **GAIA runner**:
+  ```bash
+  uv run gaia-runner
+  ```
+
+- **Run as module** (alternative):
+  ```bash
+  uv run python -m src.main
+  ```
+
+### Development Setup
+
+1. **Install development dependencies**:
+   ```bash
+   uv sync --dev
+   ```
+
+2. **Install pre-commit hooks**:
+   ```bash
+   uv run pre-commit install
+   ```
+
+3. **Run tests**:
+   ```bash
+   uv run pytest
+   ```
+
+4. **Code formatting and linting**:
+   ```bash
+   uv run black .
+   uv run ruff check .
+   uv run mypy src/
+   ```
+
 ## Table of Contents
 - [Health Check](#health-check)
 - [Google API + BeautifulSoup](#google-api--beautifulsoup)

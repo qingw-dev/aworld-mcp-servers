@@ -4,6 +4,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -89,9 +90,8 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-if __name__ == "__main__":
-    import uvicorn
-
+def main() -> None:
+    """Main entry point for the FastAPI application."""
     settings = get_settings()
 
     uvicorn.run(
@@ -102,3 +102,7 @@ if __name__ == "__main__":
         workers=1 if settings.debug else 4,
         log_level=settings.log_level.lower(),
     )
+
+
+if __name__ == "__main__":
+    main()
