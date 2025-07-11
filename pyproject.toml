@@ -144,7 +144,7 @@ dev-dependencies = [
 ]
 
 [[tool.uv.index]]
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+url = "https://pypi.org/simple"
 default = true
 
 [tool.black]
