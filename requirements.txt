@@ -225,3 +225,4 @@ puremagic
 pydub
 SpeechRecognition
 flask
+oss2
