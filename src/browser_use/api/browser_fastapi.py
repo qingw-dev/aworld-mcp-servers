@@ -2,7 +2,9 @@
 
 import json
 import subprocess
+from datetime import datetime
 
+from browser_use.agent.memory.views import MemoryConfig
 from fastapi import APIRouter, Depends, HTTPException, Request
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ValidationError
@@ -12,7 +14,7 @@ from browser_use.browser.context import BrowserContextConfig
 
 from ...metrics import get_metrics_collector
 from ...server_logging import get_logger
-from ..utils import get_a_trace_with_img
+from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss
 
 browser_router = APIRouter(prefix="/browser", tags=["browser"])
 logger = get_logger(__name__)
@@ -40,6 +42,11 @@ class BrowserAgentRequest(BaseModel):
     extract_temperature: float = 0.3
     return_trace: bool = False
     save_trace: bool = True
+    oss_access_key_id: str = ""
+    oss_access_key_secret: str = ""
+    oss_endpoint: str = ""
+    oss_bucket_name: str = ""
+    trace_file_name: str = ""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -49,6 +56,8 @@ class BrowserAgentRequest(BaseModel):
             self.extract_api_key = self.api_key
         if self.extract_model_name == "":
             self.extract_model_name = self.model_name
+        if self.trace_file_name == "":
+            self.trace_file_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
 
 def get_request_id(request: Request) -> str:
@@ -132,13 +141,13 @@ async def run_browser_agent(
     )
 
     # depracated from browser_use >= 0.4.5
-    # memory_config=None
-    # if enable_memory:
-    #     memory_config=MemoryConfig( # Ensure llm_instance is passed if not using default LLM config
-    #         llm_instance=page_extraction_llm,      # Important: Pass the agent's LLM instance here
-    #         agent_id="browser_agent_01",
-    #         memory_interval=10,
-    #     )
+    memory_config=None
+    if enable_memory:
+        memory_config=MemoryConfig( # Ensure llm_instance is passed if not using default LLM config
+            llm_instance=page_extraction_llm,      # Important: Pass the agent's LLM instance here
+            agent_id="browser_agent_01",
+            memory_interval=10,
+        )
 
     task = question
     agent = Agent(
@@ -149,8 +158,8 @@ async def run_browser_agent(
         browser=browser,
         controller=controller,
         tool_calling_method="raw",
-        # memory_config=memory_config,
-        # enable_memory=enable_memory,
+        memory_config=memory_config,
+        enable_memory=enable_memory,
     )
 
     history = None
@@ -165,7 +174,7 @@ async def run_browser_agent(
 
 @browser_router.post("/browser_use")
 async def agentic_browser_endpoint(
-    browser_request: BrowserAgentRequest, request: Request, request_id: str = Depends(get_request_id)
+    browser_request: BrowserAgentRequest, request_id: str = Depends(get_request_id)
 ):
     """Advanced search endpoint using browser agent.
 
@@ -199,6 +208,11 @@ async def agentic_browser_endpoint(
         extract_temperature = browser_request.extract_temperature
         return_trace = browser_request.return_trace
         save_trace = browser_request.save_trace
+        oss_access_key_id = browser_request.oss_access_key_id
+        oss_access_key_secret = browser_request.oss_access_key_secret
+        oss_endpoint = browser_request.oss_endpoint
+        oss_bucket_name = browser_request.oss_bucket_name
+        trace_file_name = browser_request.trace_file_name
 
         browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
         agent_history = await run_browser_agent(
@@ -229,6 +243,14 @@ async def agentic_browser_endpoint(
         if return_trace:
             tarce_info_dict = {"question": question, "agent_answer": answer_dict}
             trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
+        
+        oss_res = {"success": False}
+        if save_trace:
+            oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+            if oss_client._initialized:
+                save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_file_name)
+                oss_res["success"] = True if save_path else False
+                oss_res["path"] = save_path
 
         # Convert to dict for JSON response
         response_data = {
@@ -236,6 +258,7 @@ async def agentic_browser_endpoint(
             "question": question,
             "results": json.dumps(answer_dict, ensure_ascii=False),
             "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
+            "oss_res": json.dumps(oss_res, ensure_ascii=False) if save_trace else "{}",
         }
 
         return response_data

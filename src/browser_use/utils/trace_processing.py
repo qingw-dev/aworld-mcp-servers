@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+import os
 
 def get_a_trace_with_img(agent_history, tarce_info_dict):
     history_model_li=agent_history.history
@@ -64,3 +66,11 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
 
 def get_a_trace_without_img():
     pass
+
+def save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_file_name):
+    trace_dict=get_a_trace_with_img(agent_history, tarce_info_dict)
+    trace_prefix="ml001/browser_agent/traces/"
+    dict_key = os.path.join(trace_prefix,trace_file_name,datetime.now().strftime("%Y%m%d_%H%M%S")+"_"+tarce_info_dict.get("task_id","")+".json")
+    result = oss_client.upload_data(trace_dict, dict_key)
+    print(f"Upload trace data: {'Success: ' + result if result else 'Failed'}")
+    return result
