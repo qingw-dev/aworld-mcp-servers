@@ -3,6 +3,21 @@ FROM python:3.13-slim
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        fonts-liberation \
+        libasound2 \
+        libatk-bridge2.0-0 \
+        libatk1.0-0 \
+        libatspi2.0-0 \
+        libgbm1 \
+        libgtk-3-0 \
+        libpango-1.0-0 \
+        libvulkan1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxkbcommon0 \
+        xdg-utils \
+        xvfb \
         wget \
         unzip \
         libmagic1 \
@@ -14,6 +29,8 @@ RUN apt-get update && \
         dbus-x11 \
         curl && \
     rm -rf /var/lib/apt/lists/*
+
+RUN apt --fix-broken install -y
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -39,6 +56,7 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     rm google-chrome-stable_current_amd64.deb
 
 # Set up dbus
+RUN mkdir -p /run/dbus
 ENV DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 RUN service dbus start
 
@@ -67,4 +85,4 @@ RUN uv add ./browser-use
 EXPOSE ${SEARCH_PORT}
 
 # Use uv to run the application
-CMD ["uv", "run", "aworld-fastapi"]
+CMD ["rm -f /run/dbus/pid && dbus-daemon --system --fork && uv run aworld-fastapi"]
