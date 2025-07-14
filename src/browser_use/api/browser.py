@@ -16,7 +16,7 @@ from browser_use.browser.context import BrowserContextConfig
 
 from ...metrics import get_metrics_collector
 from ...server_logging import get_logger
-from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss
+from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss, list_traces, get_traces_from_oss
 
 logger = get_logger(__name__)
 metrics_collector = get_metrics_collector()
@@ -145,7 +145,7 @@ async def run_browser_agent(
 
 @browser_bp.route("/browser_use", methods=["POST"])
 @metrics_collector.log_performance
-def agentic_search_endpoint():
+def agentic_browser_endpoint():
     """Advanced search endpoint using handle_single_query function.
 
     Expected JSON payload:
@@ -250,6 +250,146 @@ def agentic_search_endpoint():
             "results": json.dumps(answer_dict, ensure_ascii=False),
             "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
             "oss_res": json.dumps(oss_res, ensure_ascii=False) if save_trace else "{}",
+        }
+
+        logger.info(f"[{g.request_id}] Browser Agent completed successfully")
+        return jsonify(response_data), 200
+
+    except ValidationError as e:
+        raise e  # Will be handled by the error handler
+    except Exception as e:
+        logger.error(f"[{g.request_id}] Error in Browser Agent endpoint: {e}")
+        raise e  # Will be handled by the error handler
+
+
+@browser_bp.route("/browser_get_trace", methods=["POST"])
+@metrics_collector.log_performance
+def get_browser_trace_endpoint():
+    """Advanced search endpoint using handle_single_query function.
+
+    Expected JSON payload:
+    {
+        "question": "user question",
+        "base_url": "openai_base_url for browser agent",
+        "api_key": "openai_api_key for browser agent",
+        "model_name": "model_name for browser agent",
+        "temperature": "the temperature for browser agent LLM, default is 0.3",
+        "enable_memory": "whether to enable memory, default is False",
+        "browser_port": "the browser port, default is 9111",
+        "user_data_dir": "the user_data_dir for browser, default is /tmp/chrome-debug/0000",
+        "headless": "whether to run browser in headless mode, default is True",
+        "extract_base_url": "the extract_base_url for extract tool, default same as base_url",
+        "extract_api_key": "the extract_api_key for extract tool, default same as api_key",
+        "extract_model_name": "the extract_model_name for extract tool, default same as model_name",
+        "extract_temperature": "the extract_temperature for extract tool, default is 0.3",
+        "return_trace": "whether to return trace, default is False",
+        "save_trace": "whether to save trace, default is True",
+    }
+    """
+
+    try:
+        if not request.is_json:
+            logger.warning(f"[{g.request_id}] Non-JSON request received")
+            return jsonify({"error": "Request must be JSON"}), 400
+
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ["oss_access_key_id", "oss_access_key_secret", "oss_endpoint", "oss_bucket_name"]
+        for field in required_fields:
+            if field not in data:
+                logger.warning(f"[{g.request_id}] Missing required field: '{field}'")
+                return jsonify({"error": f"Missing required field: '{field}'"}), 400
+
+        oss_access_key_id = data.get("oss_access_key_id", "")
+        oss_access_key_secret = data.get("oss_access_key_secret", "")
+        oss_endpoint = data.get("oss_endpoint", "")
+        oss_bucket_name = data.get("oss_bucket_name", "")
+        trace_file_name_li = data.get("trace_file_name_li", [])
+
+        oss_res={"success": False}
+        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+        if oss_client._initialized:
+            if len(trace_file_name_li)==0:
+                trace_li=list_traces(oss_client)
+            else:
+                trace_li=trace_file_name_li
+            trace_data=get_traces_from_oss(oss_client,trace_li)
+            oss_res["success"] = True
+            oss_res["trace_data"] = trace_data
+            
+
+        # Convert to dict for JSON response
+        response_data = {
+            "request_id": g.request_id,
+            "oss_res": json.dumps(oss_res, ensure_ascii=False),
+        }
+
+        logger.info(f"[{g.request_id}] Browser Agent completed successfully")
+        return jsonify(response_data), 200
+
+    except ValidationError as e:
+        raise e  # Will be handled by the error handler
+    except Exception as e:
+        logger.error(f"[{g.request_id}] Error in Browser Agent endpoint: {e}")
+        raise e  # Will be handled by the error handler
+
+
+@browser_bp.route("/browser_list_trace", methods=["POST"])
+@metrics_collector.log_performance
+def list_browser_trace_dir_endpoint():
+    """Advanced search endpoint using handle_single_query function.
+
+    Expected JSON payload:
+    {
+        "question": "user question",
+        "base_url": "openai_base_url for browser agent",
+        "api_key": "openai_api_key for browser agent",
+        "model_name": "model_name for browser agent",
+        "temperature": "the temperature for browser agent LLM, default is 0.3",
+        "enable_memory": "whether to enable memory, default is False",
+        "browser_port": "the browser port, default is 9111",
+        "user_data_dir": "the user_data_dir for browser, default is /tmp/chrome-debug/0000",
+        "headless": "whether to run browser in headless mode, default is True",
+        "extract_base_url": "the extract_base_url for extract tool, default same as base_url",
+        "extract_api_key": "the extract_api_key for extract tool, default same as api_key",
+        "extract_model_name": "the extract_model_name for extract tool, default same as model_name",
+        "extract_temperature": "the extract_temperature for extract tool, default is 0.3",
+        "return_trace": "whether to return trace, default is False",
+        "save_trace": "whether to save trace, default is True",
+    }
+    """
+
+    try:
+        if not request.is_json:
+            logger.warning(f"[{g.request_id}] Non-JSON request received")
+            return jsonify({"error": "Request must be JSON"}), 400
+
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ["oss_access_key_id", "oss_access_key_secret", "oss_endpoint", "oss_bucket_name"]
+        for field in required_fields:
+            if field not in data:
+                logger.warning(f"[{g.request_id}] Missing required field: '{field}'")
+                return jsonify({"error": f"Missing required field: '{field}'"}), 400
+
+        oss_access_key_id = data.get("oss_access_key_id", "")
+        oss_access_key_secret = data.get("oss_access_key_secret", "")
+        oss_endpoint = data.get("oss_endpoint", "")
+        oss_bucket_name = data.get("oss_bucket_name", "")
+
+        oss_res = {"success": False}
+        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+        if oss_client._initialized:
+            trace_li=list_traces(oss_client)
+            oss_res["success"] = True
+            oss_res["trace_li"] = trace_li
+
+        # Convert to dict for JSON response
+        response_data = {
+            "request_id": g.request_id,
+            "oss_res": json.dumps(oss_res, ensure_ascii=False),
         }
 
         logger.info(f"[{g.request_id}] Browser Agent completed successfully")

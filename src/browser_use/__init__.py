@@ -17,6 +17,8 @@ from .utils import (
     get_a_trace_without_img,
     save_trace_in_oss,
     get_oss_client,
+    list_traces,
+    get_traces_from_oss,
 )
 
 # Public API - what gets imported with "from rag import *"
@@ -31,4 +33,6 @@ __all__ = [
     "get_a_trace_without_img",
     "save_trace_in_oss",
     "get_oss_client",
+    "list_traces",
+    "get_traces_from_oss",
 ]

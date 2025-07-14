@@ -3,6 +3,7 @@
 import json
 import subprocess
 from datetime import datetime
+from typing import List
 
 from browser_use.agent.memory.views import MemoryConfig
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -14,7 +15,7 @@ from browser_use.browser.context import BrowserContextConfig
 
 from ...metrics import get_metrics_collector
 from ...server_logging import get_logger
-from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss
+from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss, list_traces, get_traces_from_oss
 
 browser_router = APIRouter(prefix="/browser", tags=["browser"])
 logger = get_logger(__name__)
@@ -58,6 +59,22 @@ class BrowserAgentRequest(BaseModel):
             self.extract_model_name = self.model_name
         if self.trace_file_name == "":
             self.trace_file_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+class GetBrowserTraceRequest(BaseModel):
+    
+    oss_access_key_id: str = ""
+    oss_access_key_secret: str = ""
+    oss_endpoint: str = ""
+    oss_bucket_name: str = ""
+    trace_file_name_li: List[str] = []
+
+class ListBrowserTraceDirRequest(BaseModel):
+    
+    oss_access_key_id: str = ""
+    oss_access_key_secret: str = ""
+    oss_endpoint: str = ""
+    oss_bucket_name: str = ""
+
 
 
 def get_request_id(request: Request) -> str:
@@ -259,6 +276,111 @@ async def agentic_browser_endpoint(
             "results": json.dumps(answer_dict, ensure_ascii=False),
             "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
             "oss_res": json.dumps(oss_res, ensure_ascii=False) if save_trace else "{}",
+        }
+
+        return response_data
+
+    except ValidationError as e:
+        logger.error(f"[{request_id}] Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[{request_id}] Error in browser agentic search endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@browser_router.post("/browser_get_trace")
+async def get_browser_trace_endpoint(
+    browser_request: GetBrowserTraceRequest, request_id: str = Depends(get_request_id)
+):
+    """Advanced search endpoint using browser agent.
+
+    Expected JSON payload:
+    {
+        "question": "user question",
+        "base_url": "your_openai_base_url",
+        "api_key": "your_openai_api_key",
+        "model_name": "your_model_name",
+        "browser_port": "the_browser_port",  // optional
+        "temperature": 0.3,  // optional
+        "enable_memory": false,  // optional
+        "user_data_dir": "/tmp/chrome-debug/0000"  // optional
+    }
+    """
+    try:
+        logger.info(f"[{request_id}] Processing browser agentic search")
+
+        
+        oss_access_key_id = browser_request.oss_access_key_id
+        oss_access_key_secret = browser_request.oss_access_key_secret
+        oss_endpoint = browser_request.oss_endpoint
+        oss_bucket_name = browser_request.oss_bucket_name
+        trace_file_name_li = browser_request.trace_file_name_li
+
+        oss_res={"success": False}
+        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+        if oss_client._initialized:
+            if len(trace_file_name_li)==0:
+                trace_li=list_traces(oss_client)
+            else:
+                trace_li=trace_file_name_li
+            trace_data=get_traces_from_oss(oss_client,trace_li)
+            oss_res["success"] = True
+            oss_res["trace_data"] = trace_data
+            
+        # Convert to dict for JSON response
+        response_data = {
+            "request_id": request_id,
+            "oss_res": json.dumps(oss_res, ensure_ascii=False),
+        }
+
+        return response_data
+
+    except ValidationError as e:
+        logger.error(f"[{request_id}] Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[{request_id}] Error in browser agentic search endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@browser_router.post("/browser_list_trace")
+async def list_browser_trace_dir_endpoint(
+    browser_request: ListBrowserTraceDirRequest, request_id: str = Depends(get_request_id)
+):
+    """Advanced search endpoint using browser agent.
+
+    Expected JSON payload:
+    {
+        "question": "user question",
+        "base_url": "your_openai_base_url",
+        "api_key": "your_openai_api_key",
+        "model_name": "your_model_name",
+        "browser_port": "the_browser_port",  // optional
+        "temperature": 0.3,  // optional
+        "enable_memory": false,  // optional
+        "user_data_dir": "/tmp/chrome-debug/0000"  // optional
+    }
+    """
+    try:
+        logger.info(f"[{request_id}] Processing browser agentic search")
+
+        
+        oss_access_key_id = browser_request.oss_access_key_id
+        oss_access_key_secret = browser_request.oss_access_key_secret
+        oss_endpoint = browser_request.oss_endpoint
+        oss_bucket_name = browser_request.oss_bucket_name
+
+        oss_res = {"success": False}
+        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+        if oss_client._initialized:
+            trace_li=list_traces(oss_client)
+            oss_res["success"] = True
+            oss_res["trace_li"] = trace_li
+
+        # Convert to dict for JSON response
+        response_data = {
+            "request_id": request_id,
+            "oss_res": json.dumps(oss_res, ensure_ascii=False),
         }
 
         return response_data

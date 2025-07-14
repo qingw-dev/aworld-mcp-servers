@@ -74,3 +74,20 @@ def save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_file_nam
     result = oss_client.upload_data(trace_dict, dict_key)
     print(f"Upload trace data: {'Success: ' + result if result else 'Failed'}")
     return result
+
+def list_traces(oss_client):
+    trace_prefix="ml001/browser_agent/traces/"
+    objs=oss_client.list_objects(trace_prefix)
+    result=[]
+    for dic in objs:
+        if dic["key"].endswith(".json"):
+            result.append(dic["key"].split(trace_prefix)[-1])
+    return result
+
+def get_traces_from_oss(oss_client, trace_name_li):
+    trace_prefix="ml001/browser_agent/traces/"
+    result=[]
+    for trace_name in trace_name_li:
+        dict_key = os.path.join(trace_prefix,trace_name)
+        result.append({"file_name":trace_name,"data":oss_client.read_data(dict_key,True)})
+    return result
