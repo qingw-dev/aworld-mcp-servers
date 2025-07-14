@@ -85,4 +85,4 @@ RUN uv add ./browser-use
 EXPOSE ${SEARCH_PORT}
 
 # Use uv to run the application
-CMD ["uv run aworld-fastapi"]
+CMD ["uv", "run", "aworld-fastapi"]
