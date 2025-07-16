@@ -29,6 +29,11 @@ from browser_use.controller.views import (
 	SearchGoogleAction,
 	SendKeysAction,
 	SwitchTabAction,
+	GoToAction,
+	ClickAction,
+	TypeAction,
+	DefaultScrollAction,
+	FinishAction,
 )
 from browser_use.utils import time_execution_sync
 
@@ -854,6 +859,137 @@ class Controller(Generic[Context]):
 			""")
 
 			return ActionResult(extracted_content=f'Updated cell {range} with {new_contents_tsv}', include_in_memory=False)
+	
+		
+		@self.registry.action('Open the target website', param_model=GoToAction)
+		async def goto(params: GoToAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			await page.goto(params.url)
+			await page.wait_for_load_state()
+			msg = f'🔗  Navigated to {params.url}'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
+		@self.registry.action('Click the element in box x1, y1, x2, y2', param_model=ClickAction)
+		async def click(params: ClickAction, browser: BrowserContext):
+			session = await browser.get_session()
+			initial_pages = len(session.context.pages)
+			page = await browser.get_current_page()
+
+			msg = ""
+			try:
+				pos_li=params.start_box.replace("<|box_start|>","").replace("<|box_end|>","").replace("[","").replace("]","").split(",")
+				x1 = int(pos_li[0].strip())
+				y1 = int(pos_li[1].strip())
+				x2 = int(pos_li[2].strip())
+				y2 = int(pos_li[3].strip())
+			except Exception as e:
+				logger.error(f'Failed to parse position: {str(e)}')
+				return ActionResult(error=f'Failed to parse position', include_in_memory=True)
+			
+			try:
+				center_x=(x1+x2)//2
+				center_y=(y1+y2)//2
+				await page.mouse.click(center_x, center_y)
+				await page.wait_for_load_state()
+				msg = f'🖱️  Clicked element at ({center_x}, {center_y})'
+				if len(session.context.pages) > initial_pages:
+					new_tab_msg = 'New tab opened - switching to it'
+					msg += f' - {new_tab_msg}'
+					logger.info(new_tab_msg)
+					await browser.switch_to_tab(-1)
+				return ActionResult(extracted_content=msg, include_in_memory=True)
+			except Exception as e:
+				logger.error(f'Failed to click at ({center_x}, {center_y}): {str(e)}')
+				return ActionResult(error=f'Failed to click at ({center_x}, {center_y})', include_in_memory=True)
+	
+		@self.registry.action(
+			'Type in the input box at coordinate x1, y1, x2, y2',
+			param_model=TypeAction,
+		)
+		async def type(params: TypeAction, browser: BrowserContext, has_sensitive_data: bool = False):
+			page = await browser.get_current_page()
+
+			try:
+				pos_li=params.start_box.replace("<|box_start|>","").replace("<|box_end|>","").replace("[","").replace("]","").split(",")
+				x1 = int(pos_li[0].strip())
+				y1 = int(pos_li[1].strip())
+				x2 = int(pos_li[2].strip())
+				y2 = int(pos_li[3].strip())
+			except Exception as e:
+				logger.error(f'Failed to parse position: {str(e)}')
+				return ActionResult(error=f'Failed to parse position', include_in_memory=True)
+
+			try:
+				center_x=(x1+x2)//2
+				center_y=(y1+y2)//2
+				await page.mouse.click(center_x, center_y)
+				await page.wait_for_load_state()
+				await page.keyboard.insert_text(params.content)
+				await page.wait_for_load_state()
+				msg = f'⌨️  Input {params.content} into ({center_x}, {center_y})'
+				logger.info(msg)
+				return ActionResult(extracted_content=msg, include_in_memory=True)
+			except Exception as e:
+				logger.error(f'Failed to Input {params.content} into ({center_x}, {center_y}): {str(e)}')
+				return ActionResult(error=f'Failed to Input {params.content} into ({center_x}, {center_y})', include_in_memory=True)
+	
+		@self.registry.action(
+			'Scroll the page, direction can only be down or up',
+			param_model=DefaultScrollAction,
+		)
+		async def scroll(params: DefaultScrollAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			viewport_size = page.viewport_size
+			window_height = viewport_size['height']
+			window_width = viewport_size['width']
+			
+			try:
+				if "up" in params.direction.strip().lower():
+					x=-1
+				elif "down" in params.direction.strip().lower():
+					x=1
+				else:
+					logger.error(f'Failed to parse direction: {params.direction}')
+					return ActionResult(error=f'Failed to parse direction', include_in_memory=True)
+			except Exception as e:
+				logger.error(f'Failed to parse direction: {str(e)}')
+				return ActionResult(error=f'Failed to parse direction', include_in_memory=True)
+
+
+			# await page.evaluate('window.scrollBy(0, window.innerHeight);')
+			await page.mouse.move(window_width//2, window_height//2)
+			await page.mouse.wheel(0, x*window_height//3)
+
+			direction = 'up' if x == -1 else 'down'
+			amount = '1/3 page'
+			msg = f'🔍  Scrolled {direction} the page by {amount}'
+			logger.info(msg)
+			return ActionResult(
+				extracted_content=msg,
+				include_in_memory=True,
+			)
+
+		@self.registry.action('return to the last visited page', param_model=NoParamsAction)
+		async def back(_: NoParamsAction, browser: BrowserContext):
+			await browser.go_back()
+			msg = '🔙  Navigated back'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+
+		@self.registry.action(
+			'finish the task, give the answer if you are asked something',
+			param_model=FinishAction,
+		)
+		async def finish(params: FinishAction):
+			msg = f'✅  Finished the task - {params.answer}'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+	
+		
+			
+
+
 
 	# Register ---------------------------------------------------------------
 

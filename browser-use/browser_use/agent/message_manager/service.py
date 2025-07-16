@@ -39,11 +39,13 @@ class MessageManager:
 		system_message: SystemMessage,
 		settings: MessageManagerSettings = MessageManagerSettings(),
 		state: MessageManagerState = MessageManagerState(),
+		add_interactive_elements: bool = True,
 	):
 		self.task = task
 		self.settings = settings
 		self.state = state
 		self.system_prompt = system_message
+		self.add_interactive_elements=add_interactive_elements
 
 		# Only initialize messages if state is empty
 		if len(self.state.history.messages) == 0:
@@ -170,7 +172,7 @@ Looking at reported structure of the current page, I can see the item '[127]<h3 
 			result,
 			include_attributes=self.settings.include_attributes,
 			step_info=step_info,
-		).get_user_message(use_vision)
+		).get_user_message(use_vision,self.add_interactive_elements)
 		self._add_message_with_tokens(state_message)
 
 	def add_model_output_old(self, model_output: AgentOutput) -> None:

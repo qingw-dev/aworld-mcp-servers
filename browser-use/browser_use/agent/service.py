@@ -155,6 +155,8 @@ class Agent(Generic[Context]):
 		enable_memory: bool = True,
 		memory_config: MemoryConfig | None = None,
 		source: str | None = None,
+		add_interactive_elements: bool = True,
+		system_message_file_name: str | None ="system_prompt.md",
 	):
 		if page_extraction_llm is None:
 			page_extraction_llm = llm
@@ -189,6 +191,8 @@ class Agent(Generic[Context]):
 			is_planner_reasoning=is_planner_reasoning,
 			save_playwright_script_path=save_playwright_script_path,
 			extend_planner_system_message=extend_planner_system_message,
+			add_interactive_elements=add_interactive_elements,
+			system_message_file_name=system_message_file_name,
 		)
 
 		# Memory settings
@@ -247,6 +251,7 @@ class Agent(Generic[Context]):
 
 		# Initialize message manager with state
 		# Initial system prompt with all actions - will be updated during each step
+		print(self.settings.system_message_file_name)
 		self._message_manager = MessageManager(
 			task=task,
 			system_message=SystemPrompt(
@@ -254,6 +259,7 @@ class Agent(Generic[Context]):
 				max_actions_per_step=self.settings.max_actions_per_step,
 				override_system_message=override_system_message,
 				extend_system_message=extend_system_message,
+				system_message_file_name=self.settings.system_message_file_name,
 			).get_system_message(),
 			settings=MessageManagerSettings(
 				max_input_tokens=self.settings.max_input_tokens,
@@ -263,6 +269,7 @@ class Agent(Generic[Context]):
 				available_file_paths=self.settings.available_file_paths,
 			),
 			state=self.state.message_manager_state,
+			add_interactive_elements=self.settings.add_interactive_elements,
 		)
 
 		if self.enable_memory:

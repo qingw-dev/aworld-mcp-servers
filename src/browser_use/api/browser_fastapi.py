@@ -9,6 +9,7 @@ from browser_use.agent.memory.views import MemoryConfig
 from fastapi import APIRouter, Depends, HTTPException, Request
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ValidationError
+from enum import Enum
 
 from browser_use import Agent, Browser, BrowserConfig, Controller
 from browser_use.browser.context import BrowserContextConfig
@@ -21,6 +22,10 @@ browser_router = APIRouter(prefix="/browser", tags=["browser"])
 logger = get_logger(__name__)
 metrics_collector = get_metrics_collector()
 
+
+class ModeEnum(str, Enum):
+    SOM = 'som'
+    VISUAL = 'visual'
 
 class Answer(BaseModel):
     important_records: str
@@ -48,6 +53,7 @@ class BrowserAgentRequest(BaseModel):
     oss_endpoint: str = ""
     oss_bucket_name: str = ""
     trace_file_name: str = ""
+    mode: ModeEnum = ModeEnum.SOM
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -133,14 +139,24 @@ async def run_browser_agent(
     extract_api_key,
     extract_model_name,
     extract_temperature,
+    exclude_actions,
+    highlight_elements,
+    add_interactive_elements,
+    system_message_file_name,
 ):
-    controller = Controller(output_model=Answer)
+    controller = Controller(
+        output_model=Answer,
+        exclude_actions=exclude_actions,
+    )
     browser = Browser(
         config=BrowserConfig(
             # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
             browser_binary_path=browser_locate,
             chrome_remote_debugging_port=browser_port,
-            new_context_config=BrowserContextConfig(no_viewport=False),
+            new_context_config=BrowserContextConfig(
+                no_viewport = False,
+                highlight_elements = highlight_elements,
+            ),
             headless=headless,
         )
     )
@@ -177,6 +193,8 @@ async def run_browser_agent(
         tool_calling_method="raw",
         memory_config=memory_config,
         enable_memory=enable_memory,
+        add_interactive_elements=add_interactive_elements,
+        system_message_file_name=system_message_file_name,
     )
 
     history = None
@@ -230,6 +248,50 @@ async def agentic_browser_endpoint(
         oss_endpoint = browser_request.oss_endpoint
         oss_bucket_name = browser_request.oss_bucket_name
         trace_file_name = browser_request.trace_file_name
+        mode = browser_request.mode
+
+        if mode == ModeEnum.SOM:
+            exclude_actions = [  
+                "goto",
+                "click",
+                "type",
+                "scroll",
+                "back",
+                "finish",
+            ]
+            highlight_elements = True
+            add_interactive_elements = True
+            system_message_file_name = "system_prompt.md"
+        else:
+            exclude_actions = [   
+                "search_google",
+                "go_to_url",
+                "go_back",
+                "click_element_by_index",
+                "input_text",
+                "save_pdf",
+                "switch_tab",
+                "open_tab",
+                "close_tab",
+                "extract_content",
+                "scroll_down",
+                "scroll_up",
+                "send_keys",
+                "scroll_to_text",
+                "get_dropdown_options",
+                "select_dropdown_option",
+                "drag_drop",
+                "get_sheet_contents",
+                "select_cell_or_range",
+                "get_range_contents",
+                "clear_selected_range",
+                "input_selected_cell_text",
+                "update_range_contents",
+                "finish",
+            ]
+            highlight_elements = False
+            add_interactive_elements = False
+            system_message_file_name = "system_prompt_vision.md"
 
         browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
         agent_history = await run_browser_agent(
@@ -246,6 +308,10 @@ async def agentic_browser_endpoint(
             extract_api_key,
             extract_model_name,
             extract_temperature,
+            exclude_actions,
+            highlight_elements,
+            add_interactive_elements,
+            system_message_file_name,
         )
         chrome_process.terminate()
 

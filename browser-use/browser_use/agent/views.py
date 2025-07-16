@@ -77,6 +77,8 @@ class AgentSettings(BaseModel):
 
 	# Playwright script generation setting
 	save_playwright_script_path: str | None = None  # Path to save the generated Playwright script
+	add_interactive_elements: bool = True
+	system_message_file_name: str | None = None
 
 
 class AgentState(BaseModel):

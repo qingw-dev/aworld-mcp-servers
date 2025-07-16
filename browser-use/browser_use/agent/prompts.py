@@ -16,9 +16,11 @@ class SystemPrompt:
 		max_actions_per_step: int = 10,
 		override_system_message: str | None = None,
 		extend_system_message: str | None = None,
+		system_message_file_name: str | None = "system_prompt.md",
 	):
 		self.default_action_description = action_description
 		self.max_actions_per_step = max_actions_per_step
+		self.system_message_file_name=system_message_file_name
 		prompt = ''
 		if override_system_message:
 			prompt = override_system_message
@@ -35,7 +37,7 @@ class SystemPrompt:
 		"""Load the prompt template from the markdown file."""
 		try:
 			# This works both in development and when installed as a package
-			with importlib.resources.files('browser_use.agent').joinpath('system_prompt.md').open('r') as f:
+			with importlib.resources.files('browser_use.agent').joinpath(self.system_message_file_name).open('r') as f:
 				self.prompt_template = f.read()
 		except Exception as e:
 			raise RuntimeError(f'Failed to load system prompt template: {e}')
@@ -72,7 +74,7 @@ class AgentMessagePrompt:
 		self.include_attributes = include_attributes or []
 		self.step_info = step_info
 
-	def get_user_message(self, use_vision: bool = True) -> HumanMessage:
+	def get_user_message(self, use_vision: bool = True,add_interactive_elements: bool =True) -> HumanMessage:
 		elements_text = self.state.element_tree.clickable_elements_to_string(include_attributes=self.include_attributes)
 
 		has_content_above = (self.state.pixels_above or 0) > 0
@@ -101,7 +103,8 @@ class AgentMessagePrompt:
 		time_str = datetime.now().strftime('%Y-%m-%d %H:%M')
 		step_info_description += f'Current date and time: {time_str}'
 
-		state_description = f"""
+		if add_interactive_elements:
+			state_description = f"""
 [Task history memory ends]
 [Current state starts here]
 The following is one-time information - if you need to remember it write it to memory:
@@ -111,6 +114,10 @@ Available tabs:
 Interactive elements from top layer of the current page inside the viewport:
 {elements_text}
 {step_info_description}
+"""
+		else:
+			state_description ="""
+[Task history memory ends]
 """
 
 		if self.result:
