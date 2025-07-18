@@ -273,7 +273,7 @@ requires-dist = [
     { name = "chardet", specifier = ">=5.2.0" },
     { name = "chess", specifier = ">=1.11.2" },
     { name = "click", specifier = "==8.2.1" },
-    { name = "fastapi", specifier = "==0.115.6" },
+    { name = "fastapi", specifier = "==0.115.8" },
     { name = "flask", specifier = ">=3.1.1" },
     { name = "google-ai-generativelanguage", specifier = "==0.6.18" },
     { name = "google-api-core", specifier = "==2.25.1" },
@@ -633,16 +633,16 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.115.6"
+version = "0.115.8"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple/" }
 dependencies = [
     { name = "pydantic" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/93/72/d83b98cd106541e8f5e5bfab8ef2974ab45a62e8a6c5b5e6940f26d2ed4b/fastapi-0.115.6.tar.gz", hash = "sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/a2/b2/5a5dc4affdb6661dea100324e19a7721d5dc524b464fe8e366c093fd7d87/fastapi-0.115.8.tar.gz", hash = "sha256:0ce9111231720190473e222cdf0f07f7206ad7e53ea02beb1d2dc36e2f0741e9" }
 wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/52/b3/7e4df40e585df024fac2f80d1a2d579c854ac37109675db2b0cc22c0bb9e/fastapi-0.115.6-py3-none-any.whl", hash = "sha256:e9240b29e36fa8f4bb7290316988e90c381e5092e0cbe84e7818cc3713bcf305" },
+    { url = "https://mirrors.aliyun.com/pypi/packages/8f/7d/2d6ce181d7a5f51dedb8c06206cbf0ec026a99bf145edd309f9e17c3282f/fastapi-0.115.8-py3-none-any.whl", hash = "sha256:753a96dd7e036b34eeef8babdfcfe3f28ff79648f86551eb36bfc1b0bf4a8cbf" },
 ]
 
 [[package]]
