@@ -67,27 +67,27 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
 def get_a_trace_without_img():
     pass
 
-def save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_file_name):
+def save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, trace_file_name):
     trace_dict=get_a_trace_with_img(agent_history, tarce_info_dict)
     trace_prefix="ml001/browser_agent/traces/"
-    dict_key = os.path.join(trace_prefix,trace_file_name,datetime.now().strftime("%Y%m%d_%H%M%S")+"_"+tarce_info_dict.get("task_id","")+".json")
+    dict_key = os.path.join(trace_prefix,trace_dir_name,trace_file_name+".json")
     result = oss_client.upload_data(trace_dict, dict_key)
     print(f"Upload trace data: {'Success: ' + result if result else 'Failed'}")
     return result
 
-def list_traces(oss_client):
+def list_traces(oss_client, trace_file_dir):
     trace_prefix="ml001/browser_agent/traces/"
-    objs=oss_client.list_objects(trace_prefix)
+    objs=oss_client.list_objects(os.path.join(trace_prefix,trace_file_dir))
     result=[]
     for dic in objs:
         if dic["key"].endswith(".json"):
-            result.append(dic["key"].split(trace_prefix)[-1])
+            result.append(dic["key"].split(os.path.join(trace_prefix,trace_file_dir)+"/")[-1].split(".json")[0])
     return result
 
-def get_traces_from_oss(oss_client, trace_name_li):
+def get_traces_from_oss(oss_client, trace_file_dir, trace_name_li):
     trace_prefix="ml001/browser_agent/traces/"
     result=[]
     for trace_name in trace_name_li:
-        dict_key = os.path.join(trace_prefix,trace_name)
+        dict_key = os.path.join(trace_prefix,trace_file_dir,trace_name+".json")
         result.append({"file_name":trace_name,"data":oss_client.read_data(dict_key,True)})
     return result
