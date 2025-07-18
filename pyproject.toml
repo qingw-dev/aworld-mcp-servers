@@ -98,9 +98,9 @@ dev = [
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.0.0",
     "black>=24.0.0",
-    "ruff>=0.1.0",
+    "ruff>=0.11.2",
     "mypy>=1.8.0",
-    "pre-commit>=3.6.0",
+    "pre-commit>=4.2.0",
 ]
 browser = [
     # "browser-use==0.3.2",  # Uncomment when ready
@@ -135,8 +135,8 @@ exclude = [
 
 [tool.uv]
 dev-dependencies = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.24.0",
     "pytest-cov>=4.0.0",
     "black>=24.0.0",
     "ruff>=0.1.0",
