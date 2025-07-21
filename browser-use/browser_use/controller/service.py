@@ -94,6 +94,30 @@ class Controller(Generic[Context]):
 			msg = f'🔍  Searched for "{params.query}" in Google'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
+		@self.registry.action(
+			'Search the query in Bing in the current tab, the query should be a search query like humans search in Bing, concrete and not vague or super long. More the single most important items. ',
+			param_model=SearchGoogleAction,
+		)
+		async def search_bing(params: SearchGoogleAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			await page.goto(f'https://www.bing.com/search?q={params.query}')
+			await page.wait_for_load_state()
+			msg = f'🔍  Searched for "{params.query}" in Bing'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
+		@self.registry.action(
+			'Search the query in Baidu in the current tab, the query should be a search query like humans search in Baidu, concrete and not vague or super long. More the single most important items. ',
+			param_model=SearchGoogleAction,
+		)
+		async def search_baidu(params: SearchGoogleAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			await page.goto(f'http://www.baidu.com/s?wd={params.query}')
+			await page.wait_for_load_state()
+			msg = f'🔍  Searched for "{params.query}" in Baidu'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
 
 		@self.registry.action('Navigate to URL in the current tab', param_model=GoToUrlAction)
 		async def go_to_url(params: GoToUrlAction, browser: BrowserContext):

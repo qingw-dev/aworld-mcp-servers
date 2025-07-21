@@ -264,6 +264,7 @@ async def process_browser_request(
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
+                "search_google",
                 "goto",
                 "click",
                 "type",
@@ -277,6 +278,8 @@ async def process_browser_request(
         else:
             exclude_actions = [   
                 "search_google",
+                "search_bing",
+                "search_baidu",
                 "go_to_url",
                 "go_back",
                 "click_element_by_index",
@@ -407,6 +410,7 @@ async def agentic_browser_endpoint(
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
+                "search_google",
                 "goto",
                 "click",
                 "type",
@@ -420,6 +424,8 @@ async def agentic_browser_endpoint(
         else:
             exclude_actions = [   
                 "search_google",
+                "search_bing",
+                "search_baidu",
                 "go_to_url",
                 "go_back",
                 "click_element_by_index",
