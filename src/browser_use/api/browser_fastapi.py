@@ -44,6 +44,8 @@ class BrowserAgentRequest(BaseModel):
     browser_port: str = "9111"
     user_data_dir: str = "/tmp/chrome-debug/0000"
     headless: bool = True
+    window_width: int = 1280
+    window_height: int = 1100
     extract_base_url: str = ""
     extract_api_key: str = ""
     extract_model_name: str = ""
@@ -157,6 +159,8 @@ async def run_browser_agent(
     extract_model_name,
     extract_temperature,
     exclude_actions,
+    window_width,
+    window_height,
     highlight_elements,
     add_interactive_elements,
     system_message_file_name,
@@ -173,6 +177,8 @@ async def run_browser_agent(
             chrome_remote_debugging_port=browser_port,
             new_context_config=BrowserContextConfig(
                 no_viewport = False,
+                window_width = window_width,
+                window_height = window_height,
                 highlight_elements = highlight_elements,
             ),
             headless=headless,
@@ -239,6 +245,8 @@ async def process_browser_request(
         browser_port = browser_request.browser_port
         user_data_dir = browser_request.user_data_dir
         headless = browser_request.headless
+        window_width = browser_request.window_width
+        window_height = browser_request.window_height
         extract_base_url = browser_request.extract_base_url
         extract_api_key = browser_request.extract_api_key
         extract_model_name = browser_request.extract_model_name
@@ -313,6 +321,8 @@ async def process_browser_request(
             extract_model_name,
             extract_temperature,
             exclude_actions,
+            window_width,
+            window_height,
             highlight_elements,
             add_interactive_elements,
             system_message_file_name,
@@ -378,6 +388,8 @@ async def agentic_browser_endpoint(
         browser_port = browser_request.browser_port
         user_data_dir = browser_request.user_data_dir
         headless = browser_request.headless
+        window_width = browser_request.window_width
+        window_height = browser_request.window_height
         extract_base_url = browser_request.extract_base_url
         extract_api_key = browser_request.extract_api_key
         extract_model_name = browser_request.extract_model_name
@@ -452,6 +464,8 @@ async def agentic_browser_endpoint(
             extract_model_name,
             extract_temperature,
             exclude_actions,
+            window_width,
+            window_height,
             highlight_elements,
             add_interactive_elements,
             system_message_file_name,
