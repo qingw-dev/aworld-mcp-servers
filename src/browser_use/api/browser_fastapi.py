@@ -358,7 +358,7 @@ async def agentic_browser_background_endpoint(
     background_tasks: BackgroundTasks,browser_request: BrowserAgentRequest, request_id: str = Depends(get_request_id)
 ):
     background_tasks.add_task(process_browser_request, browser_request,request_id)
-    return {"message": "Request received and processing in background", "request_id": request_id}
+    return {"message": "Request received and processing in background", "request_id": request_id,"pod_name":os.getenv('POD_NAME')}
 
 
 @browser_router.post("/browser_use")
@@ -502,6 +502,7 @@ async def agentic_browser_endpoint(
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
+            "pod_name":os.getenv('POD_NAME'),
             "question": question,
             "results": json.dumps(answer_dict, ensure_ascii=False),
             "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
@@ -562,6 +563,7 @@ async def get_browser_trace_endpoint(
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
+            "pod_name":os.getenv('POD_NAME'),
             "oss_res": json.dumps(oss_res, ensure_ascii=False),
         }
 
@@ -615,6 +617,7 @@ async def list_browser_trace_dir_endpoint(
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
+            "pod_name":os.getenv('POD_NAME'),
             "oss_res": json.dumps(oss_res, ensure_ascii=False),
         }
 
@@ -667,6 +670,7 @@ async def browser_trace_exist_endpoint(
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
+            "pod_name":os.getenv('POD_NAME'),
             "oss_res": json.dumps(oss_res, ensure_ascii=False),
         }
 
