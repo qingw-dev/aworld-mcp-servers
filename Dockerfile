@@ -103,6 +103,9 @@ RUN uv pip install google-api-python-client==2.175.0
 # Install browser-use from local directory
 RUN uv add ./browser-use
 
+RUN pip install playwright
+RUN playwright install
+
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
