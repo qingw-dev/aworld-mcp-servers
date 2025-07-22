@@ -60,6 +60,7 @@ class BrowserAgentRequest(BaseModel):
     trace_file_name: str = ""
     max_steps: int = 10
     mode: ModeEnum = ModeEnum.SOM
+    use_inner_chrome: bool = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -165,25 +166,40 @@ async def run_browser_agent(
     add_interactive_elements,
     system_message_file_name,
     max_steps,
+    use_inner_chrome,
 ):
     controller = Controller(
         output_model=Answer,
         exclude_actions=exclude_actions,
     )
-    browser = Browser(
-        config=BrowserConfig(
-            # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
-            browser_binary_path=browser_locate,
-            chrome_remote_debugging_port=browser_port,
-            new_context_config=BrowserContextConfig(
-                no_viewport = False,
-                window_width = window_width,
-                window_height = window_height,
-                highlight_elements = highlight_elements,
-            ),
-            headless=headless,
+    if use_inner_chrome:
+        browser = Browser(
+            config=BrowserConfig(
+                # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
+                new_context_config=BrowserContextConfig(
+                    no_viewport = False,
+                    window_width = window_width,
+                    window_height = window_height,
+                    highlight_elements = highlight_elements,
+                ),
+                headless=headless,
+            )
         )
-    )
+    else:
+        browser = Browser(
+            config=BrowserConfig(
+                # NOTE: you need to close your chrome browser - so that this can open your browser in debug mode
+                browser_binary_path=browser_locate,
+                chrome_remote_debugging_port=browser_port,
+                new_context_config=BrowserContextConfig(
+                    no_viewport = False,
+                    window_width = window_width,
+                    window_height = window_height,
+                    highlight_elements = highlight_elements,
+                ),
+                headless=headless,
+            )
+        )
     llm = ChatOpenAI(
         model=model_name,
         api_key=api_key,
@@ -261,6 +277,7 @@ async def process_browser_request(
         trace_file_name = browser_request.trace_file_name
         max_steps = browser_request.max_steps
         mode = browser_request.mode
+        use_inner_chrome = browser_request.use_inner_chrome
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -308,7 +325,10 @@ async def process_browser_request(
             add_interactive_elements = False
             system_message_file_name = "system_prompt_vision.md"
 
-        browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        if not use_inner_chrome:
+            browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        else:
+            browser_locate, chrome_process = None, None
         agent_history = await run_browser_agent(
             question,
             base_url,
@@ -330,8 +350,10 @@ async def process_browser_request(
             add_interactive_elements,
             system_message_file_name,
             max_steps,
+            use_inner_chrome,
         )
-        chrome_process.terminate()
+        if not use_inner_chrome:
+            chrome_process.terminate()
 
         if agent_history:
             result = agent_history.final_result()
@@ -409,6 +431,7 @@ async def agentic_browser_endpoint(
         trace_file_name = browser_request.trace_file_name
         max_steps = browser_request.max_steps
         mode = browser_request.mode
+        use_inner_chrome = browser_request.use_inner_chrome
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -456,7 +479,10 @@ async def agentic_browser_endpoint(
             add_interactive_elements = False
             system_message_file_name = "system_prompt_vision.md"
 
-        browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        if not use_inner_chrome:
+            browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        else:
+            browser_locate, chrome_process = None, None
         agent_history = await run_browser_agent(
             question,
             base_url,
@@ -478,8 +504,10 @@ async def agentic_browser_endpoint(
             add_interactive_elements,
             system_message_file_name,
             max_steps,
+            use_inner_chrome,
         )
-        chrome_process.terminate()
+        if not use_inner_chrome:
+            chrome_process.terminate()
 
         if agent_history:
             result = agent_history.final_result()
