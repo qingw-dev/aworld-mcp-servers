@@ -3,6 +3,7 @@ FROM python:3.13-slim
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        fonts-wqy-zenhei \
         fonts-liberation \
         libasound2 \
         libatk-bridge2.0-0 \
@@ -28,7 +29,8 @@ RUN apt-get update && \
         software-properties-common \
         dbus-x11 \
         curl && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    fc-cache -fv
 
 RUN apt --fix-broken install -y
 
@@ -80,6 +82,8 @@ RUN uv pip install marker-pdf==1.8.1
 
 # Install browser-use from local directory
 RUN uv add ./browser-use
+
+RUN playwright install
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}

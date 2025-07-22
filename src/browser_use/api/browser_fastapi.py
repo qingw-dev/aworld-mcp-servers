@@ -350,6 +350,8 @@ async def process_browser_request(
                 save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, trace_file_name)
                 oss_res["success"] = True if save_path else False
                 oss_res["path"] = save_path
+            logger.info(f"oss_res: {oss_res}")
+        
     except Exception as e:
         logger.error(f"[{request_id}] Error processing browser agentic search: {e}")
 
@@ -498,6 +500,7 @@ async def agentic_browser_endpoint(
                 save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, trace_file_name)
                 oss_res["success"] = True if save_path else False
                 oss_res["path"] = save_path
+            logger.info(f"oss_res: {oss_res}")
 
         # Convert to dict for JSON response
         response_data = {
