@@ -83,7 +83,6 @@ RUN uv pip install marker-pdf==1.8.1
 # Install browser-use from local directory
 RUN uv add ./browser-use
 
-RUN playwright install
 
 # Expose Flask port
 EXPOSE ${SEARCH_PORT}
