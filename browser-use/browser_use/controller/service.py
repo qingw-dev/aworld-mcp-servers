@@ -12,6 +12,8 @@ from playwright.async_api import ElementHandle, Page
 # from lmnr.sdk.laminar import Laminar
 from pydantic import BaseModel
 
+from googleapiclient.discovery import build
+
 from browser_use.agent.views import ActionModel, ActionResult
 from browser_use.browser.context import BrowserContext
 from browser_use.controller.registry.service import Registry
@@ -34,6 +36,7 @@ from browser_use.controller.views import (
 	TypeAction,
 	DefaultScrollAction,
 	FinishAction,
+	SearchGoogleAPIAction,
 )
 from browser_use.utils import time_execution_sync
 
@@ -81,6 +84,36 @@ class Controller(Generic[Context]):
 			)
 			async def done(params: DoneAction):
 				return ActionResult(is_done=True, success=params.success, extracted_content=params.text)
+
+		@self.registry.action(
+			'Search the query in Google using google search API, the query should be a search query like humans search in Google, concrete and not vague or super long. More the single most important items. page stands for page number(starting with 1), num denotes the number of results in that page',
+			param_model=SearchGoogleAPIAction,
+		)
+		async def search_google_by_api(params: SearchGoogleAPIAction, browser: BrowserContext):
+			# 创建服务对象
+			service = build("customsearch", "v1", developerKey=browser.config.google_api_key)
+			# 执行搜索
+			page = params.page or 1
+			num = params.num or 10
+			resp = service.cse().list(
+				q=params.query,
+				cx=browser.config.google_search_engine_id,
+				num=num,
+				start=(page-1)*10+1
+			).execute()
+
+			search_result=[]
+			for item in resp.get("items", []):
+				dic={
+					"title": item["title"],
+					"link": item["link"],
+					"snippet": item["snippet"]
+				}
+				search_result.append(dic)
+			msg = f'🔍  Searched for "{params.query}" in Google. Search result: {search_result}'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
 
 		# Basic Navigation Actions
 		@self.registry.action(
@@ -137,7 +170,7 @@ class Controller(Generic[Context]):
 		)
 		async def search_duckduckgo(params: SearchGoogleAction, browser: BrowserContext):
 			page = await browser.get_current_page()
-			await page.goto(f'https://duckduckgo.com/?q={params.query}')
+			await page.goto(f'https://duckduckgo.com/?t=h_&q={params.query}&ia=web')
 			await page.wait_for_load_state()
 			msg = f'🔍  Searched for "{params.query}" in DuckDuckGo'
 			logger.info(msg)

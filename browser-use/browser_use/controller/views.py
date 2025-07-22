@@ -107,3 +107,8 @@ class DefaultScrollAction(BaseModel):
 
 class FinishAction(BaseModel):
 	answer: str
+
+class SearchGoogleAPIAction(BaseModel):
+	query: str
+	page: int | None = Field(1, description='Page number to start search from')
+	num: int | None = Field(10, description='Number of results to return per page')

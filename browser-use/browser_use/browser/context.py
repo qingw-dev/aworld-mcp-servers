@@ -182,6 +182,8 @@ class BrowserContextConfig(BaseModel):
 	timezone_id: str | None = None
 
 	force_new_context: bool = False
+	google_api_key: str | None = None
+	google_search_engine_id: str | None = None
 
 
 @dataclass

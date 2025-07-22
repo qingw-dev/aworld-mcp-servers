@@ -58,9 +58,11 @@ class BrowserAgentRequest(BaseModel):
     oss_bucket_name: str = ""
     trace_dir_name: str = ""
     trace_file_name: str = ""
-    max_steps: int = 10
+    max_steps: int = 100
     mode: ModeEnum = ModeEnum.SOM
     use_inner_chrome: bool = False
+    google_api_key: str = ""
+    google_search_engine_id: str = ""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -167,6 +169,8 @@ async def run_browser_agent(
     system_message_file_name,
     max_steps,
     use_inner_chrome,
+    google_api_key,
+    google_search_engine_id,
 ):
     controller = Controller(
         output_model=Answer,
@@ -181,6 +185,8 @@ async def run_browser_agent(
                     window_width = window_width,
                     window_height = window_height,
                     highlight_elements = highlight_elements,
+                    google_api_key = google_api_key,
+                    google_search_engine_id = google_search_engine_id,
                 ),
                 headless=headless,
             )
@@ -196,6 +202,8 @@ async def run_browser_agent(
                     window_width = window_width,
                     window_height = window_height,
                     highlight_elements = highlight_elements,
+                    google_api_key = google_api_key,
+                    google_search_engine_id = google_search_engine_id,
                 ),
                 headless=headless,
             )
@@ -278,6 +286,8 @@ async def process_browser_request(
         max_steps = browser_request.max_steps
         mode = browser_request.mode
         use_inner_chrome = browser_request.use_inner_chrome
+        google_api_key = browser_request.google_api_key
+        google_search_engine_id = browser_request.google_search_engine_id   
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -355,6 +365,8 @@ async def process_browser_request(
             system_message_file_name,
             max_steps,
             use_inner_chrome,
+            google_api_key,
+            google_search_engine_id,
         )
         if not use_inner_chrome:
             chrome_process.terminate()
@@ -436,6 +448,8 @@ async def agentic_browser_endpoint(
         max_steps = browser_request.max_steps
         mode = browser_request.mode
         use_inner_chrome = browser_request.use_inner_chrome
+        google_api_key = browser_request.google_api_key
+        google_search_engine_id = browser_request.google_search_engine_id
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -513,6 +527,8 @@ async def agentic_browser_endpoint(
             system_message_file_name,
             max_steps,
             use_inner_chrome,
+            google_api_key,
+            google_search_engine_id,
         )
         if not use_inner_chrome:
             chrome_process.terminate()

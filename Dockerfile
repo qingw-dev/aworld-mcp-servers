@@ -98,6 +98,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Install aworld (compatible version)
 RUN uv pip install marker-pdf==1.8.1
 
+RUN uv pip install google-api-python-client==2.175.0
+
 # Install browser-use from local directory
 RUN uv add ./browser-use
 
