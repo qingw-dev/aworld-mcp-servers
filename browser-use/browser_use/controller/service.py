@@ -118,6 +118,30 @@ class Controller(Generic[Context]):
 			msg = f'🔍  Searched for "{params.query}" in Baidu'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
+		@self.registry.action(
+			'Search the query in Yahoo in the current tab, the query should be a search query like humans search in Yahoo, concrete and not vague or super long. More the single most important items. ',
+			param_model=SearchGoogleAction,
+		)
+		async def search_yahoo(params: SearchGoogleAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			await page.goto(f'https://search.yahoo.com/search?p={params.query}')
+			await page.wait_for_load_state('networkidle')
+			msg = f'🔍  Searched for "{params.query}" in Yahoo'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
+		
+		@self.registry.action(
+			'Search the query in DuckDuckGo in the current tab, the query should be a search query like humans search in DuckDuckGo, concrete and not vague or super long. More the single most important items. ',
+			param_model=SearchGoogleAction,
+		)
+		async def search_duckduckgo(params: SearchGoogleAction, browser: BrowserContext):
+			page = await browser.get_current_page()
+			await page.goto(f'https://duckduckgo.com/?q={params.query}')
+			await page.wait_for_load_state('networkidle')
+			msg = f'🔍  Searched for "{params.query}" in DuckDuckGo'
+			logger.info(msg)
+			return ActionResult(extracted_content=msg, include_in_memory=True)
 
 		@self.registry.action('Navigate to URL in the current tab', param_model=GoToUrlAction)
 		async def go_to_url(params: GoToUrlAction, browser: BrowserContext):
