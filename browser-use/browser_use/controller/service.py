@@ -90,7 +90,7 @@ class Controller(Generic[Context]):
 		async def search_google(params: SearchGoogleAction, browser: BrowserContext):
 			page = await browser.get_current_page()
 			await page.goto(f'https://www.google.com/search?q={params.query}&udm=14')
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔍  Searched for "{params.query}" in Google'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -102,7 +102,7 @@ class Controller(Generic[Context]):
 		async def search_bing(params: SearchGoogleAction, browser: BrowserContext):
 			page = await browser.get_current_page()
 			await page.goto(f'https://www.bing.com/search?q={params.query}')
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔍  Searched for "{params.query}" in Bing'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -114,7 +114,7 @@ class Controller(Generic[Context]):
 		async def search_baidu(params: SearchGoogleAction, browser: BrowserContext):
 			page = await browser.get_current_page()
 			await page.goto(f'http://www.baidu.com/s?wd={params.query}')
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔍  Searched for "{params.query}" in Baidu'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -123,7 +123,7 @@ class Controller(Generic[Context]):
 		async def go_to_url(params: GoToUrlAction, browser: BrowserContext):
 			page = await browser.get_current_page()
 			await page.goto(params.url)
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔗  Navigated to {params.url}'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -221,7 +221,7 @@ class Controller(Generic[Context]):
 			await browser.switch_to_tab(params.page_id)
 			# Wait for tab to be ready and ensure references are synchronized
 			page = await browser.get_agent_current_page()
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔄  Switched to tab {params.page_id}'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -889,7 +889,7 @@ class Controller(Generic[Context]):
 		async def goto(params: GoToAction, browser: BrowserContext):
 			page = await browser.get_current_page()
 			await page.goto(params.url)
-			await page.wait_for_load_state()
+			await page.wait_for_load_state('networkidle')
 			msg = f'🔗  Navigated to {params.url}'
 			logger.info(msg)
 			return ActionResult(extracted_content=msg, include_in_memory=True)
@@ -915,7 +915,7 @@ class Controller(Generic[Context]):
 				center_x=(x1+x2)//2
 				center_y=(y1+y2)//2
 				await page.mouse.click(center_x, center_y)
-				await page.wait_for_load_state()
+				await page.wait_for_load_state('networkidle')
 				msg = f'🖱️  Clicked element at ({center_x}, {center_y})'
 				if len(session.context.pages) > initial_pages:
 					new_tab_msg = 'New tab opened - switching to it'
@@ -948,9 +948,9 @@ class Controller(Generic[Context]):
 				center_x=(x1+x2)//2
 				center_y=(y1+y2)//2
 				await page.mouse.click(center_x, center_y)
-				await page.wait_for_load_state()
+				await page.wait_for_load_state('networkidle')
 				await page.keyboard.insert_text(params.content)
-				await page.wait_for_load_state()
+				await page.wait_for_load_state('networkidle')
 				msg = f'⌨️  Input {params.content} into ({center_x}, {center_y})'
 				logger.info(msg)
 				return ActionResult(extracted_content=msg, include_in_memory=True)
