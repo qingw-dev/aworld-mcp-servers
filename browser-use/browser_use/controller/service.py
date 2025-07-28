@@ -252,9 +252,14 @@ class Controller(Generic[Context]):
 				raise Exception(f'Element index {params.index} does not exist - retry or use alternative actions')
 
 			element_node = await browser.get_dom_element_by_index(params.index)
+			element_handle = await browser.get_element_by_index(params.index)
+			box = await element_handle.bounding_box()
+			if box is None:
+				raise Exception("Element is not visible or has no bounding box")
+			x, y, width, height = box['x'], box['y'], box['width'], box['height']
 			await browser._input_text_element_node(element_node, params.text)
 			if not has_sensitive_data:
-				msg = f'⌨️  Input {params.text} into index {params.index}'
+				msg = f'⌨️  Input {params.text} into index {params.index} (x:{x}, y:{y}, width:{width}, height:{height})'
 			else:
 				msg = f'⌨️  Input sensitive data into index {params.index}'
 			logger.info(msg)
