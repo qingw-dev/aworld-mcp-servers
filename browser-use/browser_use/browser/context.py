@@ -1178,6 +1178,9 @@ class BrowserContext:
 
 		try:
 			await self.remove_highlights()
+
+			screenshot_no_highlights_b64 = await self.take_screenshot()
+
 			dom_service = DomService(page)
 			content = await dom_service.get_clickable_elements(
 				focus_element=focus_element,
@@ -1225,6 +1228,7 @@ class BrowserContext:
 				title=await page.title(),
 				tabs=tabs_info,
 				screenshot=screenshot_b64,
+				screenshot_no_highlights=screenshot_no_highlights_b64,
 				pixels_above=pixels_above,
 				pixels_below=pixels_below,
 			)

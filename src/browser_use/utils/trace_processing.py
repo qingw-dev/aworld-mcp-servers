@@ -22,6 +22,7 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
         if a_step["result"][-1]["error"] !=None:
             continue
         screenshot=a_step["state"]["screenshot"]
+        screenshot_no_highlights=a_step["state"]["screenshot_no_highlights"]
         action_li=[]
         for action in history_model.model_output.action:
             action_dict=json.loads(action.model_dump_json())
@@ -35,6 +36,7 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
                 "content":{
                     "text":question,
                     "image":screenshot,
+                    "screenshot_no_highlights":screenshot_no_highlights,
                     "snapshot":a_step["snapshot"]
                 }
             }
@@ -44,6 +46,7 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
                 "content":{
                     "text":"<image>",
                     "image":screenshot,
+                    "screenshot_no_highlights":screenshot_no_highlights,
                     "snapshot":a_step["snapshot"]
                 }
             }

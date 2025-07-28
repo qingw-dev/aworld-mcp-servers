@@ -209,6 +209,11 @@ class Controller(Generic[Context]):
 				raise Exception(f'Element with index {params.index} does not exist - retry or use alternative actions')
 
 			element_node = await browser.get_dom_element_by_index(params.index)
+			element_handle = await browser.get_element_by_index(params.index)
+			box = await element_handle.bounding_box()
+			if box is None:
+				raise Exception("Element is not visible or has no bounding box")
+			x, y, width, height = box['x'], box['y'], box['width'], box['height']
 			initial_pages = len(session.context.pages)
 
 			# if element has file uploader then dont click
@@ -224,7 +229,7 @@ class Controller(Generic[Context]):
 				if download_path:
 					msg = f'💾  Downloaded file to {download_path}'
 				else:
-					msg = f'🖱️  Clicked button with index {params.index}: {element_node.get_all_text_till_next_clickable_element(max_depth=2)}'
+					msg = f'🖱️  Clicked button with index {params.index}: {element_node.get_all_text_till_next_clickable_element (max_depth=2)}(x:{x}, y:{y}, width:{width}, height:{height})'
 
 				logger.info(msg)
 				logger.debug(f'Element xpath: {element_node.xpath}')
