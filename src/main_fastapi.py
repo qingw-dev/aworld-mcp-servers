@@ -94,6 +94,7 @@ def main() -> None:
     """Main entry point for the FastAPI application."""
     settings = get_settings()
 
+    # settings.debug = True
     uvicorn.run(
         "src.main_fastapi:app",
         host=settings.host,
@@ -101,6 +102,7 @@ def main() -> None:
         reload=settings.debug,
         workers=1 if settings.debug else 4,
         log_level=settings.log_level.lower(),
+        # limit_concurrency=1,  # 限制每个进程最大并发请求数
     )
 
 

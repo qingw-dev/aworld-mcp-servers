@@ -35,7 +35,7 @@ class Answer(BaseModel):
 
 
 class BrowserAgentRequest(BaseModel):
-    question: str
+    question: str|List[str]
     base_url: str
     api_key: str
     model_name: str
@@ -57,7 +57,7 @@ class BrowserAgentRequest(BaseModel):
     oss_endpoint: str = ""
     oss_bucket_name: str = ""
     trace_dir_name: str = ""
-    trace_file_name: str = ""
+    trace_file_name: str|List[str] = ""
     max_steps: int = 100
     mode: ModeEnum = ModeEnum.SOM
     use_inner_chrome: bool = False
@@ -66,6 +66,8 @@ class BrowserAgentRequest(BaseModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if type(self.question) == str:
+            self.question = [self.question]
         if self.extract_base_url == "":
             self.extract_base_url = self.base_url
         if self.extract_api_key == "":
@@ -74,10 +76,11 @@ class BrowserAgentRequest(BaseModel):
             self.extract_model_name = self.model_name
         if self.trace_dir_name == "":
             self.trace_dir_name = f"{datetime.now().strftime('%Y%m%d')}_default"
-        if self.trace_file_name == "":
-            random_number = random.randrange(100000)
-            self.trace_file_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_default_{random_number:05d}"
-
+        if self.trace_file_name == "" or self.trace_file_name == [] or len(self.trace_file_name)!=len(self.question):
+            for i in range(len(self.question)):
+                random_number = random.randrange(100000)
+                self.trace_file_name.append(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_default_{random_number:05d}")
+            
 class GetBrowserTraceRequest(BaseModel):
     
     oss_access_key_id: str = ""
@@ -339,59 +342,70 @@ async def process_browser_request(
             add_interactive_elements = False
             system_message_file_name = "system_prompt_vision.md"
 
-        if not use_inner_chrome:
-            browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
-        else:
-            browser_locate, chrome_process = None, None
-        agent_history = await run_browser_agent(
-            question,
-            base_url,
-            api_key,
-            model_name,
-            temperature,
-            enable_memory,
-            browser_port,
-            browser_locate,
-            headless,
-            extract_base_url,
-            extract_api_key,
-            extract_model_name,
-            extract_temperature,
-            exclude_actions,
-            window_width,
-            window_height,
-            highlight_elements,
-            add_interactive_elements,
-            system_message_file_name,
-            max_steps,
-            use_inner_chrome,
-            google_api_key,
-            google_search_engine_id,
-        )
-        if not use_inner_chrome:
-            chrome_process.terminate()
-
-        if agent_history:
-            result = agent_history.final_result()
-            parsed_res: Answer = Answer.model_validate_json(result)
-            answer_dict = parsed_res.model_dump()
-            print("\n--------------------------------")
-            print(f"answer_dict: {answer_dict}")
-            print("\n--------------------------------")
-
-        tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+        for a_question,a_trace_file_name in zip(question,trace_file_name):
+            try:
+                if not use_inner_chrome:
+                    browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+                else:
+                    browser_locate, chrome_process = None, None
         
-        oss_res = {"success": False}
-        if save_trace:
-            oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
-            if oss_client._initialized:
-                save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, trace_file_name)
-                oss_res["success"] = True if save_path else False
-                oss_res["path"] = save_path
-            logger.info(f"oss_res: {oss_res}")
+                agent_history = await run_browser_agent(
+                    a_question,
+                    base_url,
+                    api_key,
+                    model_name,
+                    temperature,
+                    enable_memory,
+                    browser_port,
+                    browser_locate,
+                    headless,
+                    extract_base_url,
+                    extract_api_key,
+                    extract_model_name,
+                    extract_temperature,
+                    exclude_actions,
+                    window_width,
+                    window_height,
+                    highlight_elements,
+                    add_interactive_elements,
+                    system_message_file_name,
+                    max_steps,
+                    use_inner_chrome,
+                    google_api_key,
+                    google_search_engine_id,
+                )
+
+                if not use_inner_chrome:
+                    chrome_process.terminate()
+                
+                if agent_history:
+                    result = agent_history.final_result()
+                    parsed_res: Answer = Answer.model_validate_json(result)
+                    answer_dict = parsed_res.model_dump()
+                    print("\n--------------------------------")
+                    print(f"answer_dict: {answer_dict}")
+                    print("\n--------------------------------")
+
+                tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+                
+                oss_res = {"success": False}
+                if save_trace:
+                    oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+                    if oss_client._initialized:
+                        save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
+                        oss_res["success"] = True if save_path else False
+                        oss_res["path"] = save_path
+                    logger.info(f"oss_res: {oss_res}")
+                
+            except Exception as e:
+                print(e)
+                if not use_inner_chrome and chrome_process:
+                    chrome_process.terminate()
+        
         
     except Exception as e:
         logger.error(f"[{request_id}] Error processing browser agentic search: {e}")
+
 
 @browser_router.post("/browser_use_background")
 async def agentic_browser_background_endpoint(
@@ -501,67 +515,80 @@ async def agentic_browser_endpoint(
             add_interactive_elements = False
             system_message_file_name = "system_prompt_vision.md"
 
-        if not use_inner_chrome:
-            browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
-        else:
-            browser_locate, chrome_process = None, None
-        agent_history = await run_browser_agent(
-            question,
-            base_url,
-            api_key,
-            model_name,
-            temperature,
-            enable_memory,
-            browser_port,
-            browser_locate,
-            headless,
-            extract_base_url,
-            extract_api_key,
-            extract_model_name,
-            extract_temperature,
-            exclude_actions,
-            window_width,
-            window_height,
-            highlight_elements,
-            add_interactive_elements,
-            system_message_file_name,
-            max_steps,
-            use_inner_chrome,
-            google_api_key,
-            google_search_engine_id,
-        )
-        if not use_inner_chrome:
-            chrome_process.terminate()
+        answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
+        for a_question,a_trace_file_name in zip(question,trace_file_name):
+            try:
+                if not use_inner_chrome:
+                    browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+                else:
+                    browser_locate, chrome_process = None, None
 
-        if agent_history:
-            result = agent_history.final_result()
-            parsed_res: Answer = Answer.model_validate_json(result)
-            answer_dict = parsed_res.model_dump()
-            print("\n--------------------------------")
-            print(f"answer_dict: {answer_dict}")
-            print("\n--------------------------------")
+                agent_history = await run_browser_agent(
+                    a_question,
+                    base_url,
+                    api_key,
+                    model_name,
+                    temperature,
+                    enable_memory,
+                    browser_port,
+                    browser_locate,
+                    headless,
+                    extract_base_url,
+                    extract_api_key,
+                    extract_model_name,
+                    extract_temperature,
+                    exclude_actions,
+                    window_width,
+                    window_height,
+                    highlight_elements,
+                    add_interactive_elements,
+                    system_message_file_name,
+                    max_steps,
+                    use_inner_chrome,
+                    google_api_key,
+                    google_search_engine_id,
+                )
+                if not use_inner_chrome:
+                    chrome_process.terminate()
+                
+                if agent_history:
+                    result = agent_history.final_result()
+                    parsed_res: Answer = Answer.model_validate_json(result)
+                    answer_dict = parsed_res.model_dump()
+                    print("\n--------------------------------")
+                    print(f"answer_dict: {answer_dict}")
+                    print("\n--------------------------------")
+                    answer_dict_li.append(answer_dict)
 
-        tarce_info_dict = {"question": question, "agent_answer": answer_dict}
-        if return_trace:
-            trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
+                tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+                if return_trace:
+                    trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
+                    trace_dict_li.append(trace_dict)
+                
+                oss_res = {"success": False}
+                if save_trace:
+                    oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+                    if oss_client._initialized:
+                        save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
+                        oss_res["success"] = True if save_path else False
+                        oss_res["path"] = save_path
+                    logger.info(f"oss_res: {oss_res}")
+                oss_res_li.append(oss_res)
+
+            except Exception as e:
+                print(e)
+                if not use_inner_chrome and chrome_process:
+                    chrome_process.terminate()
         
-        oss_res = {"success": False}
-        if save_trace:
-            oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
-            if oss_client._initialized:
-                save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, trace_file_name)
-                oss_res["success"] = True if save_path else False
-                oss_res["path"] = save_path
-            logger.info(f"oss_res: {oss_res}")
 
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
             "pod_name":os.getenv('POD_NAME'),
             "question": question,
-            "results": json.dumps(answer_dict, ensure_ascii=False),
-            "trace": json.dumps(trace_dict, ensure_ascii=False) if return_trace else "{}",
-            "oss_res": json.dumps(oss_res, ensure_ascii=False) if save_trace else "{}",
+            "results": json.dumps(answer_dict_li, ensure_ascii=False),
+            "trace": json.dumps(trace_dict_li, ensure_ascii=False) if return_trace else "{}",
+            "oss_res": json.dumps(oss_res_li, ensure_ascii=False) if save_trace else "{}",
         }
 
         return response_data

@@ -209,11 +209,15 @@ class Controller(Generic[Context]):
 				raise Exception(f'Element with index {params.index} does not exist - retry or use alternative actions')
 
 			element_node = await browser.get_dom_element_by_index(params.index)
-			element_handle = await browser.get_element_by_index(params.index)
-			box = await element_handle.bounding_box()
-			if box is None:
-				raise Exception("Element is not visible or has no bounding box")
-			x, y, width, height = box['x'], box['y'], box['width'], box['height']
+			x, y, width, height = None, None, None, None
+			try:
+				element_handle = await browser.get_element_by_index(params.index)
+				box = await element_handle.bounding_box()
+				x, y, width, height = box['x'], box['y'], box['width'], box['height']
+			except Exception as e:
+				logger.warning(f'Element with index {params.index} is not visible or has no bounding box')
+
+			
 			initial_pages = len(session.context.pages)
 
 			# if element has file uploader then dont click
@@ -229,7 +233,10 @@ class Controller(Generic[Context]):
 				if download_path:
 					msg = f'💾  Downloaded file to {download_path}'
 				else:
-					msg = f'🖱️  Clicked button with index {params.index}: {element_node.get_all_text_till_next_clickable_element (max_depth=2)}(x:{x}, y:{y}, width:{width}, height:{height})'
+					if x is None:
+						msg = f'🖱️  Clicked button with index {params.index}: {element_node.get_all_text_till_next_clickable_element (max_depth=2)}'
+					else:
+						msg = f'🖱️  Clicked button with index {params.index}: {element_node.get_all_text_till_next_clickable_element (max_depth=2)} (x:{x}, y:{y}, width:{width}, height:{height})'
 
 				logger.info(msg)
 				logger.debug(f'Element xpath: {element_node.xpath}')
@@ -252,14 +259,20 @@ class Controller(Generic[Context]):
 				raise Exception(f'Element index {params.index} does not exist - retry or use alternative actions')
 
 			element_node = await browser.get_dom_element_by_index(params.index)
-			element_handle = await browser.get_element_by_index(params.index)
-			box = await element_handle.bounding_box()
-			if box is None:
-				raise Exception("Element is not visible or has no bounding box")
-			x, y, width, height = box['x'], box['y'], box['width'], box['height']
+			x, y, width, height = None, None, None, None
+			try:
+				element_handle = await browser.get_element_by_index(params.index)
+				box = await element_handle.bounding_box()
+				x, y, width, height = box['x'], box['y'], box['width'], box['height']
+			except Exception as e:
+				logger.warning(f'Element with index {params.index} is not visible or has no bounding box')
+
 			await browser._input_text_element_node(element_node, params.text)
 			if not has_sensitive_data:
-				msg = f'⌨️  Input {params.text} into index {params.index} (x:{x}, y:{y}, width:{width}, height:{height})'
+				if x is None:
+					msg = f'⌨️  Input {params.text} into index {params.index}'
+				else:
+					msg = f'⌨️  Input {params.text} into index {params.index} (x:{x}, y:{y}, width:{width}, height:{height})'
 			else:
 				msg = f'⌨️  Input sensitive data into index {params.index}'
 			logger.info(msg)
