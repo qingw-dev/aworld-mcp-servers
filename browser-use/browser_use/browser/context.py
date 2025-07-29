@@ -1257,6 +1257,7 @@ class BrowserContext:
 			full_page=full_page,
 			animations='disabled',
 			caret='initial',
+			timeout=0,
 		)
 
 		screenshot_b64 = base64.b64encode(screenshot).decode('utf-8')

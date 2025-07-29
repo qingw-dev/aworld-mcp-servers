@@ -124,6 +124,11 @@ def run_chrome_debug_mode(browser_port, user_data_dir, headless):
             "--no-default-browser-check",
             f"--user-data-dir={user_data_dir}",
             "--no-sandbox",
+            "--disable-gpu",
+            "--disable-web-security",
+            "--disable-features=VizDisplayCompositor",
+            "--font-render-hinting=none",
+            "--disable-skia-runtime-opts",
             # "--headless",  # 启用无头模式
             # "--disable-gpu",  # 禁用 GPU 加速（可选）
             # "--window-size=1920,1080"  # 设置窗口大小（可选）
@@ -141,6 +146,11 @@ def run_chrome_debug_mode(browser_port, user_data_dir, headless):
             "--no-default-browser-check",
             f"--user-data-dir={user_data_dir}",
             "--no-sandbox",
+            "--disable-gpu",
+            "--disable-web-security",
+            "--disable-features=VizDisplayCompositor",
+            "--font-render-hinting=none",
+            "--disable-skia-runtime-opts",
             # "--headless",  # 启用无头模式
             # "--disable-gpu",  # 禁用 GPU 加速（可选）
             # "--window-size=1920,1080"  # 设置窗口大小（可选）
