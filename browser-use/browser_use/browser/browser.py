@@ -36,7 +36,7 @@ from browser_use.utils import time_execution_async
 
 logger = logging.getLogger(__name__)
 
-IN_DOCKER = os.environ.get('IN_DOCKER', 'false').lower()[0] in 'ty1'
+# IN_DOCKER = os.environ.get('IN_DOCKER', 'false').lower()[0] in 'ty1'
 
 
 class ProxySettings(BaseModel):
@@ -120,6 +120,8 @@ class BrowserConfig(BaseModel):
 
 	proxy: ProxySettings | None = None
 	new_context_config: BrowserContextConfig = Field(default_factory=BrowserContextConfig)
+
+	in_docker: bool = False
 
 
 # @singleton: TODO - think about id singleton makes sense here
@@ -244,7 +246,7 @@ class Browser:
 				f'--remote-debugging-port={self.config.chrome_remote_debugging_port}',
 				*([f'--user-data-dir={user_data_dir.resolve()}'] if not provided_user_data_dir else []),
 				*CHROME_ARGS,
-				*(CHROME_DOCKER_ARGS if IN_DOCKER else []),
+				*(CHROME_DOCKER_ARGS if self.config.in_docker else []),
 				*(CHROME_HEADLESS_ARGS if self.config.headless else []),
 				*(CHROME_DISABLE_SECURITY_ARGS if self.config.disable_security else []),
 				*(CHROME_DETERMINISTIC_RENDERING_ARGS if self.config.deterministic_rendering else []),
@@ -314,7 +316,7 @@ class Browser:
 		chrome_args = {
 			f'--remote-debugging-port={self.config.chrome_remote_debugging_port}',
 			*CHROME_ARGS,
-			*(CHROME_DOCKER_ARGS if IN_DOCKER else []),
+			*(CHROME_DOCKER_ARGS if self.config.in_docker else []),
 			*(CHROME_HEADLESS_ARGS if self.config.headless else []),
 			*(CHROME_DISABLE_SECURITY_ARGS if self.config.disable_security else []),
 			*(CHROME_DETERMINISTIC_RENDERING_ARGS if self.config.deterministic_rendering else []),

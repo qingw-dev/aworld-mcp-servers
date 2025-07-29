@@ -63,6 +63,7 @@ class BrowserAgentRequest(BaseModel):
     use_inner_chrome: bool = False
     google_api_key: str = ""
     google_search_engine_id: str = ""
+    in_docker: bool = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -174,6 +175,7 @@ async def run_browser_agent(
     use_inner_chrome,
     google_api_key,
     google_search_engine_id,
+    in_docker,
 ):
     controller = Controller(
         output_model=Answer,
@@ -192,6 +194,7 @@ async def run_browser_agent(
                     google_search_engine_id = google_search_engine_id,
                 ),
                 headless=headless,
+                in_docker=in_docker,
             )
         )
     else:
@@ -291,6 +294,7 @@ async def process_browser_request(
         use_inner_chrome = browser_request.use_inner_chrome
         google_api_key = browser_request.google_api_key
         google_search_engine_id = browser_request.google_search_engine_id   
+        in_docker = browser_request.in_docker
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -373,6 +377,7 @@ async def process_browser_request(
                     use_inner_chrome,
                     google_api_key,
                     google_search_engine_id,
+                    in_docker,
                 )
 
                 if not use_inner_chrome:
@@ -464,6 +469,7 @@ async def agentic_browser_endpoint(
         use_inner_chrome = browser_request.use_inner_chrome
         google_api_key = browser_request.google_api_key
         google_search_engine_id = browser_request.google_search_engine_id
+        in_docker = browser_request.in_docker
 
         if mode == ModeEnum.SOM:
             exclude_actions = [  
@@ -547,6 +553,7 @@ async def agentic_browser_endpoint(
                     use_inner_chrome,
                     google_api_key,
                     google_search_engine_id,
+                    in_docker,
                 )
                 if not use_inner_chrome:
                     chrome_process.terminate()
