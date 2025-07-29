@@ -100,7 +100,8 @@ def main() -> None:
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
-        workers=1 if settings.debug else 4,
+        workers=1 if settings.debug else 2,
+        # workers=1,
         log_level=settings.log_level.lower(),
         # limit_concurrency=1,  # 限制每个进程最大并发请求数
     )

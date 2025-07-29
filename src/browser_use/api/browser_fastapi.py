@@ -1,5 +1,5 @@
 """FastAPI Browser Use API routes."""
-
+from .browser_pool import browser_semaphore
 import json
 import os
 import subprocess
@@ -263,153 +263,162 @@ async def run_browser_agent(
 async def process_browser_request(
     browser_request: BrowserAgentRequest, request_id: str = Depends(get_request_id)
 ):
-    try:
-        logger.info(f"[{request_id}] Processing browser agentic search")
+    async with browser_semaphore: 
+        logger.info(f"!!!Semaphore value = {browser_semaphore._value}")
+        try:
+            logger.info(f"[{request_id}] Processing browser agentic search")
 
-        question = browser_request.question
-        base_url = browser_request.base_url
-        api_key = browser_request.api_key
-        model_name = browser_request.model_name
-        temperature = browser_request.temperature
-        enable_memory = browser_request.temperature
-        browser_port = browser_request.browser_port
-        user_data_dir = browser_request.user_data_dir
-        headless = browser_request.headless
-        window_width = browser_request.window_width
-        window_height = browser_request.window_height
-        extract_base_url = browser_request.extract_base_url
-        extract_api_key = browser_request.extract_api_key
-        extract_model_name = browser_request.extract_model_name
-        extract_temperature = browser_request.extract_temperature
-        return_trace = browser_request.return_trace
-        save_trace = browser_request.save_trace
-        oss_access_key_id = browser_request.oss_access_key_id
-        oss_access_key_secret = browser_request.oss_access_key_secret
-        oss_endpoint = browser_request.oss_endpoint
-        oss_bucket_name = browser_request.oss_bucket_name
-        trace_dir_name = browser_request.trace_dir_name
-        trace_file_name = browser_request.trace_file_name
-        max_steps = browser_request.max_steps
-        mode = browser_request.mode
-        use_inner_chrome = browser_request.use_inner_chrome
-        google_api_key = browser_request.google_api_key
-        google_search_engine_id = browser_request.google_search_engine_id   
-        in_docker = browser_request.in_docker
+            question = browser_request.question
+            base_url = browser_request.base_url
+            api_key = browser_request.api_key
+            model_name = browser_request.model_name
+            temperature = browser_request.temperature
+            enable_memory = browser_request.temperature
+            browser_port = browser_request.browser_port
+            user_data_dir = browser_request.user_data_dir
+            headless = browser_request.headless
+            window_width = browser_request.window_width
+            window_height = browser_request.window_height
+            extract_base_url = browser_request.extract_base_url
+            extract_api_key = browser_request.extract_api_key
+            extract_model_name = browser_request.extract_model_name
+            extract_temperature = browser_request.extract_temperature
+            return_trace = browser_request.return_trace
+            save_trace = browser_request.save_trace
+            oss_access_key_id = browser_request.oss_access_key_id
+            oss_access_key_secret = browser_request.oss_access_key_secret
+            oss_endpoint = browser_request.oss_endpoint
+            oss_bucket_name = browser_request.oss_bucket_name
+            trace_dir_name = browser_request.trace_dir_name
+            trace_file_name = browser_request.trace_file_name
+            max_steps = browser_request.max_steps
+            mode = browser_request.mode
+            use_inner_chrome = browser_request.use_inner_chrome
+            google_api_key = browser_request.google_api_key
+            google_search_engine_id = browser_request.google_search_engine_id   
+            in_docker = browser_request.in_docker
 
-        if mode == ModeEnum.SOM:
-            exclude_actions = [  
-                "search_google",
-                "search_bing",
-                "search_baidu",
-                "goto",
-                "click",
-                "type",
-                "scroll",
-                "back",
-                "finish",
-            ]
-            highlight_elements = True
-            add_interactive_elements = True
-            system_message_file_name = "system_prompt.md"
-        else:
-            exclude_actions = [   
-                "search_google",
-                "search_bing",
-                "search_baidu",
-                "search_yahoo",
-                "search_duckduckgo",
-                "go_to_url",
-                "go_back",
-                "click_element_by_index",
-                "input_text",
-                "save_pdf",
-                "switch_tab",
-                "open_tab",
-                "close_tab",
-                "extract_content",
-                "scroll_down",
-                "scroll_up",
-                "send_keys",
-                "scroll_to_text",
-                "get_dropdown_options",
-                "select_dropdown_option",
-                "drag_drop",
-                "get_sheet_contents",
-                "select_cell_or_range",
-                "get_range_contents",
-                "clear_selected_range",
-                "input_selected_cell_text",
-                "update_range_contents",
-                "finish",
-            ]
-            highlight_elements = False
-            add_interactive_elements = False
-            system_message_file_name = "system_prompt_vision.md"
+            if mode == ModeEnum.SOM:
+                exclude_actions = [  
+                    "search_google",
+                    "search_bing",
+                    "search_baidu",
+                    "goto",
+                    "click",
+                    "type",
+                    "scroll",
+                    "back",
+                    "finish",
+                ]
+                highlight_elements = True
+                add_interactive_elements = True
+                system_message_file_name = "system_prompt.md"
+            else:
+                exclude_actions = [   
+                    "search_google",
+                    "search_bing",
+                    "search_baidu",
+                    "search_yahoo",
+                    "search_duckduckgo",
+                    "go_to_url",
+                    "go_back",
+                    "click_element_by_index",
+                    "input_text",
+                    "save_pdf",
+                    "switch_tab",
+                    "open_tab",
+                    "close_tab",
+                    "extract_content",
+                    "scroll_down",
+                    "scroll_up",
+                    "send_keys",
+                    "scroll_to_text",
+                    "get_dropdown_options",
+                    "select_dropdown_option",
+                    "drag_drop",
+                    "get_sheet_contents",
+                    "select_cell_or_range",
+                    "get_range_contents",
+                    "clear_selected_range",
+                    "input_selected_cell_text",
+                    "update_range_contents",
+                    "finish",
+                ]
+                highlight_elements = False
+                add_interactive_elements = False
+                system_message_file_name = "system_prompt_vision.md"
 
-        for a_question,a_trace_file_name in zip(question,trace_file_name):
-            try:
-                if not use_inner_chrome:
-                    browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
-                else:
-                    browser_locate, chrome_process = None, None
-        
-                agent_history = await run_browser_agent(
-                    a_question,
-                    base_url,
-                    api_key,
-                    model_name,
-                    temperature,
-                    enable_memory,
-                    browser_port,
-                    browser_locate,
-                    headless,
-                    extract_base_url,
-                    extract_api_key,
-                    extract_model_name,
-                    extract_temperature,
-                    exclude_actions,
-                    window_width,
-                    window_height,
-                    highlight_elements,
-                    add_interactive_elements,
-                    system_message_file_name,
-                    max_steps,
-                    use_inner_chrome,
-                    google_api_key,
-                    google_search_engine_id,
-                    in_docker,
-                )
+            answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
+            for a_question,a_trace_file_name in zip(question,trace_file_name):
+                try:
+                    if not use_inner_chrome:
+                        browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+                    else:
+                        browser_locate, chrome_process = None, None
+            
+                    agent_history = await run_browser_agent(
+                        a_question,
+                        base_url,
+                        api_key,
+                        model_name,
+                        temperature,
+                        enable_memory,
+                        browser_port,
+                        browser_locate,
+                        headless,
+                        extract_base_url,
+                        extract_api_key,
+                        extract_model_name,
+                        extract_temperature,
+                        exclude_actions,
+                        window_width,
+                        window_height,
+                        highlight_elements,
+                        add_interactive_elements,
+                        system_message_file_name,
+                        max_steps,
+                        use_inner_chrome,
+                        google_api_key,
+                        google_search_engine_id,
+                        in_docker,
+                    )
 
-                if not use_inner_chrome:
-                    chrome_process.terminate()
-                
-                if agent_history:
-                    result = agent_history.final_result()
-                    parsed_res: Answer = Answer.model_validate_json(result)
-                    answer_dict = parsed_res.model_dump()
-                    print("\n--------------------------------")
-                    print(f"answer_dict: {answer_dict}")
-                    print("\n--------------------------------")
+                    if not use_inner_chrome:
+                        chrome_process.terminate()
+                    
+                    if agent_history:
+                        result = agent_history.final_result()
+                        parsed_res: Answer = Answer.model_validate_json(result)
+                        answer_dict = parsed_res.model_dump()
+                        print("\n--------------------------------")
+                        print(f"answer_dict: {answer_dict}")
+                        print("\n--------------------------------")
+                        answer_dict_li.append(answer_dict)
 
-                tarce_info_dict = {"question": question, "agent_answer": answer_dict}
-                
-                oss_res = {"success": False}
-                if save_trace:
-                    oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
-                    if oss_client._initialized:
-                        save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
-                        oss_res["success"] = True if save_path else False
-                        oss_res["path"] = save_path
-                    logger.info(f"oss_res: {oss_res}")
-                
-            except Exception as e:
-                print(e)
-                if not use_inner_chrome and chrome_process:
-                    chrome_process.terminate()
-        
-        
-    except Exception as e:
-        logger.error(f"[{request_id}] Error processing browser agentic search: {e}")
+                    tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+                    if return_trace:
+                        trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
+                        trace_dict_li.append(trace_dict)
+
+                    oss_res = {"success": False}
+                    if save_trace:
+                        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+                        if oss_client._initialized:
+                            save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
+                            oss_res["success"] = True if save_path else False
+                            oss_res["path"] = save_path
+                        logger.info(f"oss_res: {oss_res}")
+                    oss_res_li.append(oss_res)
+                    
+                    
+                except Exception as e:
+                    print(e)
+                    if not use_inner_chrome and chrome_process:
+                        chrome_process.terminate()
+            return {"answer_dict_li": answer_dict_li, "trace_dict_li": trace_dict_li, "oss_res_li": oss_res_li}
+            
+        except Exception as e:
+            logger.error(f"[{request_id}] Error processing browser agentic search: {e}")
 
 
 @browser_router.post("/browser_use_background")
@@ -439,163 +448,164 @@ async def agentic_browser_endpoint(
     }
     """
     try:
-        logger.info(f"[{request_id}] Processing browser agentic search")
+        res_dict = await process_browser_request(browser_request, request_id)
+        # logger.info(f"[{request_id}] Processing browser agentic search")
 
-        question = browser_request.question
-        base_url = browser_request.base_url
-        api_key = browser_request.api_key
-        model_name = browser_request.model_name
-        temperature = browser_request.temperature
-        enable_memory = browser_request.temperature
-        browser_port = browser_request.browser_port
-        user_data_dir = browser_request.user_data_dir
-        headless = browser_request.headless
-        window_width = browser_request.window_width
-        window_height = browser_request.window_height
-        extract_base_url = browser_request.extract_base_url
-        extract_api_key = browser_request.extract_api_key
-        extract_model_name = browser_request.extract_model_name
-        extract_temperature = browser_request.extract_temperature
-        return_trace = browser_request.return_trace
-        save_trace = browser_request.save_trace
-        oss_access_key_id = browser_request.oss_access_key_id
-        oss_access_key_secret = browser_request.oss_access_key_secret
-        oss_endpoint = browser_request.oss_endpoint
-        oss_bucket_name = browser_request.oss_bucket_name
-        trace_dir_name = browser_request.trace_dir_name
-        trace_file_name = browser_request.trace_file_name
-        max_steps = browser_request.max_steps
-        mode = browser_request.mode
-        use_inner_chrome = browser_request.use_inner_chrome
-        google_api_key = browser_request.google_api_key
-        google_search_engine_id = browser_request.google_search_engine_id
-        in_docker = browser_request.in_docker
+        # question = browser_request.question
+        # base_url = browser_request.base_url
+        # api_key = browser_request.api_key
+        # model_name = browser_request.model_name
+        # temperature = browser_request.temperature
+        # enable_memory = browser_request.temperature
+        # browser_port = browser_request.browser_port
+        # user_data_dir = browser_request.user_data_dir
+        # headless = browser_request.headless
+        # window_width = browser_request.window_width
+        # window_height = browser_request.window_height
+        # extract_base_url = browser_request.extract_base_url
+        # extract_api_key = browser_request.extract_api_key
+        # extract_model_name = browser_request.extract_model_name
+        # extract_temperature = browser_request.extract_temperature
+        # return_trace = browser_request.return_trace
+        # save_trace = browser_request.save_trace
+        # oss_access_key_id = browser_request.oss_access_key_id
+        # oss_access_key_secret = browser_request.oss_access_key_secret
+        # oss_endpoint = browser_request.oss_endpoint
+        # oss_bucket_name = browser_request.oss_bucket_name
+        # trace_dir_name = browser_request.trace_dir_name
+        # trace_file_name = browser_request.trace_file_name
+        # max_steps = browser_request.max_steps
+        # mode = browser_request.mode
+        # use_inner_chrome = browser_request.use_inner_chrome
+        # google_api_key = browser_request.google_api_key
+        # google_search_engine_id = browser_request.google_search_engine_id
+        # in_docker = browser_request.in_docker
 
-        if mode == ModeEnum.SOM:
-            exclude_actions = [  
-                "search_google",
-                "search_bing",
-                "search_baidu",
-                "goto",
-                "click",
-                "type",
-                "scroll",
-                "back",
-                "finish",
-            ]
-            highlight_elements = True
-            add_interactive_elements = True
-            system_message_file_name = "system_prompt.md"
-        else:
-            exclude_actions = [   
-                "search_google",
-                "search_bing",
-                "search_baidu",
-                "search_yahoo",
-                "search_duckduckgo",
-                "go_to_url",
-                "go_back",
-                "click_element_by_index",
-                "input_text",
-                "save_pdf",
-                "switch_tab",
-                "open_tab",
-                "close_tab",
-                "extract_content",
-                "scroll_down",
-                "scroll_up",
-                "send_keys",
-                "scroll_to_text",
-                "get_dropdown_options",
-                "select_dropdown_option",
-                "drag_drop",
-                "get_sheet_contents",
-                "select_cell_or_range",
-                "get_range_contents",
-                "clear_selected_range",
-                "input_selected_cell_text",
-                "update_range_contents",
-                "finish",
-            ]
-            highlight_elements = False
-            add_interactive_elements = False
-            system_message_file_name = "system_prompt_vision.md"
+        # if mode == ModeEnum.SOM:
+        #     exclude_actions = [  
+        #         "search_google",
+        #         "search_bing",
+        #         "search_baidu",
+        #         "goto",
+        #         "click",
+        #         "type",
+        #         "scroll",
+        #         "back",
+        #         "finish",
+        #     ]
+        #     highlight_elements = True
+        #     add_interactive_elements = True
+        #     system_message_file_name = "system_prompt.md"
+        # else:
+        #     exclude_actions = [   
+        #         "search_google",
+        #         "search_bing",
+        #         "search_baidu",
+        #         "search_yahoo",
+        #         "search_duckduckgo",
+        #         "go_to_url",
+        #         "go_back",
+        #         "click_element_by_index",
+        #         "input_text",
+        #         "save_pdf",
+        #         "switch_tab",
+        #         "open_tab",
+        #         "close_tab",
+        #         "extract_content",
+        #         "scroll_down",
+        #         "scroll_up",
+        #         "send_keys",
+        #         "scroll_to_text",
+        #         "get_dropdown_options",
+        #         "select_dropdown_option",
+        #         "drag_drop",
+        #         "get_sheet_contents",
+        #         "select_cell_or_range",
+        #         "get_range_contents",
+        #         "clear_selected_range",
+        #         "input_selected_cell_text",
+        #         "update_range_contents",
+        #         "finish",
+        #     ]
+        #     highlight_elements = False
+        #     add_interactive_elements = False
+        #     system_message_file_name = "system_prompt_vision.md"
 
-        answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
-        for a_question,a_trace_file_name in zip(question,trace_file_name):
-            try:
-                if not use_inner_chrome:
-                    browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
-                else:
-                    browser_locate, chrome_process = None, None
+        # answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
+        # for a_question,a_trace_file_name in zip(question,trace_file_name):
+        #     try:
+        #         if not use_inner_chrome:
+        #             browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
+        #         else:
+        #             browser_locate, chrome_process = None, None
 
-                agent_history = await run_browser_agent(
-                    a_question,
-                    base_url,
-                    api_key,
-                    model_name,
-                    temperature,
-                    enable_memory,
-                    browser_port,
-                    browser_locate,
-                    headless,
-                    extract_base_url,
-                    extract_api_key,
-                    extract_model_name,
-                    extract_temperature,
-                    exclude_actions,
-                    window_width,
-                    window_height,
-                    highlight_elements,
-                    add_interactive_elements,
-                    system_message_file_name,
-                    max_steps,
-                    use_inner_chrome,
-                    google_api_key,
-                    google_search_engine_id,
-                    in_docker,
-                )
-                if not use_inner_chrome:
-                    chrome_process.terminate()
+        #         agent_history = await run_browser_agent(
+        #             a_question,
+        #             base_url,
+        #             api_key,
+        #             model_name,
+        #             temperature,
+        #             enable_memory,
+        #             browser_port,
+        #             browser_locate,
+        #             headless,
+        #             extract_base_url,
+        #             extract_api_key,
+        #             extract_model_name,
+        #             extract_temperature,
+        #             exclude_actions,
+        #             window_width,
+        #             window_height,
+        #             highlight_elements,
+        #             add_interactive_elements,
+        #             system_message_file_name,
+        #             max_steps,
+        #             use_inner_chrome,
+        #             google_api_key,
+        #             google_search_engine_id,
+        #             in_docker,
+        #         )
+        #         if not use_inner_chrome:
+        #             chrome_process.terminate()
                 
-                if agent_history:
-                    result = agent_history.final_result()
-                    parsed_res: Answer = Answer.model_validate_json(result)
-                    answer_dict = parsed_res.model_dump()
-                    print("\n--------------------------------")
-                    print(f"answer_dict: {answer_dict}")
-                    print("\n--------------------------------")
-                    answer_dict_li.append(answer_dict)
+        #         if agent_history:
+        #             result = agent_history.final_result()
+        #             parsed_res: Answer = Answer.model_validate_json(result)
+        #             answer_dict = parsed_res.model_dump()
+        #             print("\n--------------------------------")
+        #             print(f"answer_dict: {answer_dict}")
+        #             print("\n--------------------------------")
+        #             answer_dict_li.append(answer_dict)
 
-                tarce_info_dict = {"question": question, "agent_answer": answer_dict}
-                if return_trace:
-                    trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
-                    trace_dict_li.append(trace_dict)
+        #         tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+        #         if return_trace:
+        #             trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
+        #             trace_dict_li.append(trace_dict)
                 
-                oss_res = {"success": False}
-                if save_trace:
-                    oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
-                    if oss_client._initialized:
-                        save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
-                        oss_res["success"] = True if save_path else False
-                        oss_res["path"] = save_path
-                    logger.info(f"oss_res: {oss_res}")
-                oss_res_li.append(oss_res)
+        #         oss_res = {"success": False}
+        #         if save_trace:
+        #             oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+        #             if oss_client._initialized:
+        #                 save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
+        #                 oss_res["success"] = True if save_path else False
+        #                 oss_res["path"] = save_path
+        #             logger.info(f"oss_res: {oss_res}")
+        #         oss_res_li.append(oss_res)
 
-            except Exception as e:
-                print(e)
-                if not use_inner_chrome and chrome_process:
-                    chrome_process.terminate()
+        #     except Exception as e:
+        #         print(e)
+        #         if not use_inner_chrome and chrome_process:
+        #             chrome_process.terminate()
         
 
         # Convert to dict for JSON response
         response_data = {
             "request_id": request_id,
             "pod_name":os.getenv('POD_NAME'),
-            "question": question,
-            "results": json.dumps(answer_dict_li, ensure_ascii=False),
-            "trace": json.dumps(trace_dict_li, ensure_ascii=False) if return_trace else "{}",
-            "oss_res": json.dumps(oss_res_li, ensure_ascii=False) if save_trace else "{}",
+            "question": browser_request.question,
+            "results": json.dumps(res_dict["answer_dict_li"], ensure_ascii=False),
+            "trace": json.dumps(res_dict["trace_dict_li"], ensure_ascii=False) if browser_request.return_trace else "{}",
+            "oss_res": json.dumps(res_dict["oss_res_li"], ensure_ascii=False) if browser_request.save_trace else "{}",
         }
 
         return response_data

@@ -9,6 +9,7 @@ web browsing capabilities, and various search services.
 from .api import (
     browser_bp,
     browser_router,
+    browser_semaphore,
 )
 
 # Utilities
@@ -27,6 +28,7 @@ __all__ = [
     # API
     "browser_bp",
     "browser_router",
+    "browser_semaphore",
 
     # Utilities
     "get_a_trace_with_img",
