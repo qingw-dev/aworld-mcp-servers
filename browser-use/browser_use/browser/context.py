@@ -1179,7 +1179,11 @@ class BrowserContext:
 		try:
 			await self.remove_highlights()
 
-			screenshot_no_highlights_b64 = await self.take_screenshot()
+			try:
+				screenshot_no_highlights_b64 = await self.take_screenshot()
+			except Exception as e:
+				logger.debug(f'⚠  Failed to take screenshot without highlights (this is usually ok): {str(e)}')
+				screenshot_no_highlights_b64 = None
 
 			dom_service = DomService(page)
 			content = await dom_service.get_clickable_elements(
@@ -1257,7 +1261,7 @@ class BrowserContext:
 			full_page=full_page,
 			animations='disabled',
 			caret='initial',
-			timeout=0,
+			timeout=5000,
 		)
 
 		screenshot_b64 = base64.b64encode(screenshot).decode('utf-8')
