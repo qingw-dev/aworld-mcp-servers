@@ -65,7 +65,7 @@ def setup_logging():
 	except AttributeError:
 		pass  # Level already exists, which is fine
 
-	log_type = os.getenv('BROWSER_USE_LOGGING_LEVEL', 'info').lower()
+	log_type = os.getenv('BROWSER_USE_LOGGING_LEVEL', 'debug').lower()
 
 	# Check if handlers are already set up
 	if logging.getLogger().hasHandlers():

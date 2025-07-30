@@ -102,7 +102,8 @@ def main() -> None:
         reload=settings.debug,
         workers=1 if settings.debug else 2,
         # workers=1,
-        log_level=settings.log_level.lower(),
+        # log_level=settings.log_level.lower(),
+        log_level="debug",
         # limit_concurrency=1,  # 限制每个进程最大并发请求数
     )
 

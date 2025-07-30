@@ -359,7 +359,7 @@ class BrowserContext:
 		# Bring page to front
 		logger.debug('🫨  Bringing tab to front: %s', current_page)
 		await current_page.bring_to_front()
-		await current_page.wait_for_load_state('load')
+		await current_page.wait_for_load_state('load',timeout=10)
 
 		# Set the viewport size for the active page
 		await self.set_viewport_size(current_page)
