@@ -78,6 +78,15 @@ def save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name
     print(f"Upload trace data: {'Success: ' + result if result else 'Failed'}")
     return result
 
+def save_trace_in_local(agent_history, tarce_info_dict, trace_dir_name, a_trace_file_name):
+    trace_dict=get_a_trace_with_img(agent_history, tarce_info_dict)
+    trace_prefix="/Users/zhuige/Documents/llm/agent/projects/online_browser/aworld-mcp-servers/datas/traces"
+    if not os.path.exists(os.path.join(trace_prefix,trace_dir_name)):
+        os.makedirs(os.path.join(trace_prefix,trace_dir_name))
+    dict_key = os.path.join(trace_prefix,trace_dir_name,a_trace_file_name+".json")
+    with open(dict_key,"w",encoding="utf-8") as f:
+        json.dump(trace_dict,f,ensure_ascii=False,indent=4)
+
 def list_traces(oss_client, trace_file_dir):
     trace_prefix="ml001/browser_agent/traces/"
     objs=oss_client.list_objects(os.path.join(trace_prefix,trace_file_dir))

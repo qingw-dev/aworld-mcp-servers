@@ -18,7 +18,7 @@ from browser_use.browser.context import BrowserContextConfig
 
 from ...metrics import get_metrics_collector
 from ...server_logging import get_logger
-from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss, list_traces, get_traces_from_oss
+from ..utils import get_a_trace_with_img, get_oss_client, save_trace_in_oss, save_trace_in_local, list_traces, get_traces_from_oss
 
 browser_router = APIRouter(prefix="/browser", tags=["browser"])
 logger = get_logger(__name__)
@@ -64,6 +64,8 @@ class BrowserAgentRequest(BaseModel):
     google_api_key: str = ""
     google_search_engine_id: str = ""
     in_docker: bool = False
+    save_local: bool = False
+    save_oss: bool = True
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -309,6 +311,8 @@ async def process_browser_request(
             google_api_key = browser_request.google_api_key
             google_search_engine_id = browser_request.google_search_engine_id   
             in_docker = browser_request.in_docker
+            save_local = browser_request.save_local
+            save_oss = browser_request.save_oss
 
             if mode == ModeEnum.SOM:
                 exclude_actions = [  
@@ -412,15 +416,19 @@ async def process_browser_request(
                         trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
                         trace_dict_li.append(trace_dict)
 
-                    oss_res = {"success": False}
-                    if save_trace:
-                        oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
-                        if oss_client._initialized:
-                            save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
-                            oss_res["success"] = True if save_path else False
-                            oss_res["path"] = save_path
-                        logger.info(f"oss_res: {oss_res}")
-                    oss_res_li.append(oss_res)
+                    if save_oss:
+                        oss_res = {"success": False}
+                        if save_trace:
+                            oss_client=get_oss_client(oss_access_key_id, oss_access_key_secret, oss_endpoint, oss_bucket_name, True)
+                            if oss_client._initialized:
+                                save_path=save_trace_in_oss(agent_history, tarce_info_dict, oss_client, trace_dir_name, a_trace_file_name)
+                                oss_res["success"] = True if save_path else False
+                                oss_res["path"] = save_path
+                            logger.info(f"oss_res: {oss_res}")
+                        oss_res_li.append(oss_res)
+                    
+                    if save_local:
+                        save_trace_in_local(agent_history, tarce_info_dict, trace_dir_name, a_trace_file_name)
                     
                     
                 except Exception as e:
