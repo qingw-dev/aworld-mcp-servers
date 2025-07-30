@@ -129,6 +129,8 @@ def run_chrome_debug_mode(browser_port, user_data_dir, headless):
             "--disable-features=VizDisplayCompositor",
             "--font-render-hinting=none",
             "--disable-skia-runtime-opts",
+            "--disable-font-subpixel-positioning",
+            "--enable-unsafe-swiftshader",
             # "--headless",  # 启用无头模式
             # "--disable-gpu",  # 禁用 GPU 加速（可选）
             # "--window-size=1920,1080"  # 设置窗口大小（可选）
