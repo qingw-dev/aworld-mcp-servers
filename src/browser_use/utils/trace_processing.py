@@ -6,6 +6,9 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
     history_model_li=agent_history.history
 
     task_id=tarce_info_dict.get("task_id","")
+    start_time=tarce_info_dict.get("start_time",-1)
+    end_time=tarce_info_dict.get("end_time",-1)
+    cost_second=tarce_info_dict.get("cost_second",-1)
     level=tarce_info_dict.get("level","")
     question=tarce_info_dict.get("question","")
     ground_truth=tarce_info_dict.get("ground_truth","")
@@ -14,7 +17,7 @@ def get_a_trace_with_img(agent_history, tarce_info_dict):
     final_answer=tarce_info_dict.get("final_answer","")
     score_em=tarce_info_dict.get("score_em",False)
 
-    trace_dict={"task_id":task_id,"level":level,"question":question,"ground_truth":ground_truth}
+    trace_dict={"task_id":task_id,"level":level,"question":question,"ground_truth":ground_truth,"start_time":start_time,"end_time":end_time,"cost_second":cost_second}
 
     conversations=[]
     for idx,history_model in enumerate(history_model_li):

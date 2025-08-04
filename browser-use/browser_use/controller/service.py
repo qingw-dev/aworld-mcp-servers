@@ -240,6 +240,7 @@ class Controller(Generic[Context]):
 
 				logger.info(msg)
 				logger.debug(f'Element xpath: {element_node.xpath}')
+				await browser._wait_for_page_and_frames_load()
 				if len(session.context.pages) > initial_pages:
 					new_tab_msg = 'New tab opened - switching to it'
 					msg += f' - {new_tab_msg}'
@@ -997,6 +998,7 @@ class Controller(Generic[Context]):
 				await page.mouse.click(center_x, center_y)
 				await page.wait_for_load_state()
 				msg = f'🖱️  Clicked element at ({center_x}, {center_y})'
+				await browser._wait_for_page_and_frames_load()
 				if len(session.context.pages) > initial_pages:
 					new_tab_msg = 'New tab opened - switching to it'
 					msg += f' - {new_tab_msg}'

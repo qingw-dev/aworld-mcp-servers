@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 from datetime import datetime
-from typing import List
+from typing import Any, List
 
 from browser_use.agent.memory.views import MemoryConfig
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
@@ -67,6 +67,9 @@ class BrowserAgentRequest(BaseModel):
     in_docker: bool = False
     save_local: bool = False
     save_oss: bool = True
+    available_actions: List | None = None
+    initial_actions: List[dict[str, dict[str, Any]]] | None = None
+    max_actions_per_step: int = 10
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -84,6 +87,8 @@ class BrowserAgentRequest(BaseModel):
             for i in range(len(self.question)):
                 random_number = random.randrange(100000)
                 self.trace_file_name.append(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_default_{random_number:05d}")
+        if self.initial_actions and len(self.initial_actions):
+            initial_actions = None
             
 class GetBrowserTraceRequest(BaseModel):
     
@@ -191,6 +196,8 @@ async def run_browser_agent(
     google_api_key,
     google_search_engine_id,
     in_docker,
+    initial_actions,
+    max_actions_per_step,
 ):
     controller = Controller(
         output_model=Answer,
@@ -259,6 +266,8 @@ async def run_browser_agent(
         # browser_session=browser_session,
         browser=browser,
         controller=controller,
+        initial_actions=initial_actions,
+        max_actions_per_step=max_actions_per_step,
         tool_calling_method="raw",
         memory_config=memory_config,
         enable_memory=enable_memory,
@@ -314,6 +323,9 @@ async def process_browser_request(
             in_docker = browser_request.in_docker
             save_local = browser_request.save_local
             save_oss = browser_request.save_oss
+            available_actions = browser_request.available_actions
+            initial_actions = browser_request.initial_actions
+            max_actions_per_step = browser_request.max_actions_per_step
 
             if mode == ModeEnum.SOM:
                 exclude_actions = [  
@@ -364,6 +376,18 @@ async def process_browser_request(
                 highlight_elements = False
                 add_interactive_elements = False
                 system_message_file_name = "system_prompt_vision.md"
+            
+            all_actions=set({"done", "search_google_by_api", "search_google", "search_bing",
+                         "search_baidu", "search_yahoo", "search_duckduckgo", "go_to_url", 
+                         "go_back", "wait", "click_element_by_index", "input_text",
+                         "save_pdf", "switch_tab", "open_tab", "close_tab", "extract_content",
+                         "scroll_down", "scroll_up", "send_keys", "scroll_to_text",
+                         "get_dropdown_options", "select_dropdown_option", "drag_drop",
+                         "get_sheet_contents", "select_cell_or_range", "get_range_contents",
+                         "clear_selected_range", "input_selected_cell_text", "update_range_contents",
+                         "goto", "click", "type", "scroll", "back", "finish"})
+            if available_actions:
+                exclude_actions=list(all_actions-set(available_actions))
 
             answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
             for a_question,a_trace_file_name in zip(question,trace_file_name):
@@ -400,10 +424,14 @@ async def process_browser_request(
                         google_api_key,
                         google_search_engine_id,
                         in_docker,
+                        initial_actions,
+                        max_actions_per_step,
                     )
 
                     if not use_inner_chrome:
                         chrome_process.terminate()
+
+                    end_time = time.time()
                     
                     if agent_history:
                         result = agent_history.final_result()
@@ -414,7 +442,7 @@ async def process_browser_request(
                         print("\n--------------------------------")
                         answer_dict_li.append(answer_dict)
 
-                    tarce_info_dict = {"question": question, "agent_answer": answer_dict}
+                    tarce_info_dict = {"question": question, "agent_answer": answer_dict, "start_time": start_time, "end_time": end_time, "cost_second": end_time-start_time}
                     if return_trace:
                         trace_dict = get_a_trace_with_img(agent_history, tarce_info_dict)
                         trace_dict_li.append(trace_dict)
@@ -591,6 +619,8 @@ async def agentic_browser_endpoint(
         #             google_api_key,
         #             google_search_engine_id,
         #             in_docker,
+        #             initial_actions,
+        #             max_actions_per_step,
         #         )
         #         if not use_inner_chrome:
         #             chrome_process.terminate()
