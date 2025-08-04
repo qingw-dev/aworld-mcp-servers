@@ -116,8 +116,13 @@ Interactive elements from top layer of the current page inside the viewport:
 {step_info_description}
 """
 		else:
-			state_description ="""
+			state_description =f"""
 [Task history memory ends]
+[Current state starts here]
+The following is one-time information - if you need to remember it write it to memory:
+Current url: {self.state.url}
+Available tabs:
+{self.state.tabs}
 """
 
 		if self.result:
