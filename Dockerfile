@@ -100,7 +100,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --index-strategy unsafe-best-match
 
 # Install aworld (compatible version)
-RUN uv pip install marker-pdf==1.8.1
+# RUN uv pip install marker-pdf==1.8.1
 
 RUN uv pip install google-api-python-client==2.175.0
 
