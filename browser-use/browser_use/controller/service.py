@@ -75,7 +75,7 @@ class Controller(Generic[Context]):
 					if isinstance(value, enum.Enum):
 						output_dict[key] = value.value
 
-				return ActionResult(is_done=True, success=params.success, extracted_content=json.dumps(output_dict))
+				return ActionResult(is_done=True, success=params.success, extracted_content=json.dumps(output_dict,ensure_ascii=False))
 		else:
 
 			@self.registry.action(

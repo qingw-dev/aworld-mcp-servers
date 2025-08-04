@@ -1,4 +1,5 @@
 """FastAPI Browser Use API routes."""
+import time
 from .browser_pool import browser_semaphore
 import json
 import os
@@ -367,6 +368,8 @@ async def process_browser_request(
             answer_dict_li,trace_dict_li,oss_res_li=[],[],[]
             for a_question,a_trace_file_name in zip(question,trace_file_name):
                 try:
+                    start_time=time.time()
+                    print(f"START TIME: {start_time}")
                     if not use_inner_chrome:
                         browser_locate, chrome_process = run_chrome_debug_mode(browser_port, user_data_dir, headless)
                     else:
@@ -435,6 +438,10 @@ async def process_browser_request(
                     print(e)
                     if not use_inner_chrome and chrome_process:
                         chrome_process.terminate()
+                    end_time = time.time()
+                    logger.info(f"END TIME: {end_time}")
+                    print(f"END TIME: {end_time}")
+                    print(f"COST TIME: {end_time-start_time}")
             return {"answer_dict_li": answer_dict_li, "trace_dict_li": trace_dict_li, "oss_res_li": oss_res_li}
             
         except Exception as e:

@@ -104,6 +104,7 @@ def main() -> None:
         # workers=1,
         # log_level=settings.log_level.lower(),
         log_level="debug",
+        # limit_max_requests=4,
         # limit_concurrency=1,  # 限制每个进程最大并发请求数
     )
 
