@@ -187,11 +187,11 @@ tinycss2==1.4.0
 tinyhtml5==2.0.0
 tokenizers==0.21.2
 toml==0.10.2
-torch==2.7.1
+# torch==2.7.1
 tornado==6.5.1
 tqdm==4.67.1
 traitlets==5.14.3
-transformers==4.52.4
+# transformers==4.52.4
 trio==0.30.0
 trio-websocket==0.12.2
 typer==0.16.0
